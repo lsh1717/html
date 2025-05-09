@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        
+        .head-menu{
+            display: flex;
+        }
+
+        .head-menu ul{
+            display: flex;
+            list-style-type: none;
+        }
+        .head-menu{
+            justify-content: space-between;
+        }
+
+        .head-menu ul li{
+            margin:20px;
+            font-size: 30px;
+        }
+        .head-menu ul li a{
+            font-size:25px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="head-menu">
+           <ul>
+                <li><i class="fa-solid fa-bars"></i></li>
+                <li><a href="#">pay</a></li>
+            </ul>
+            
+            <ul>
+                <li><i class="fa-regular fa-comment"></i></li>
+                <li><i class="fa-regular fa-bell"></i></li>
+                <li><i class="fa-solid fa-basket-shopping"></i></li>
+            </ul>
+        </div>
+        <div class="search">
+            <span>NAVER</span>
+            <input type="text" class="search-box" placeholder="검색어를 입력하세요">
+            <button class="search-button">검색</button>
+         </div>
+    </header>
+    <nav>
+        <ul class="nav-list">
+            <li class="icon-with-label">
+                <i class="fa-regular fa-envelope"></i><span>메일</span>
+            </li>
+            <li class="icon-with-label"><i class="fa-solid fa-mug-saucer"></i></i><span>카페</span></li>
+            <li class="icon-with-label"><i class="fa-solid fa-blog"></i></i><span>블로그</span></li>
+            <li class="icon-with-label"><i class="fa-solid fa-store"></i><span>스토어</span></li>
+            <li class="icon-with-label"><i class="fa-solid fa-newspaper"></i><span>뉴스</span></li>
+            <li class="icon-with-label"><i class="fa-solid fa-arrow-trend-up"></i></i><span>증권</span></li>
+            <li class="icon-with-label"><i class="fa-solid fa-house"></i></i><span>부동산</span></li>
+            <li class="icon-with-label"><i class="fa-solid fa-book-atlas"></i></i><span>지도</span></li>
+            <li class="icon-with-label"><i class="fa-solid fa-book"></i><span>웹툰</span></li>
+            <li class="icon-with-label"><i class="fa-solid fa-podcast"></i><span>치지직</span></li>
+            <li class="icon-with-label"><i class="fa-brands fa-rocketchat"></i><span>...</span></li>
+        </ul>
+    </nav>
+        
+    <style>
+        .search{
+            color: greenyellow;
+            font-size: 50px;
+            font-weight: bold;
+            text-align: center;
+        }
+        /* nav > ul, nav ul */
+        .nav-list{
+            display: flex;
+            justify-content: space-between;
+        }
+        a{
+         text-decoration: none;
+         border:3px solid black;
+         border-radius: 100%; 
+         padding:5px;
+         display: inline-block;
+         width: 25px;
+         height: 25px;
+        }
+        a:visited{
+            color:black;
+        }
+        a:active{
+            color:black;
+        }
+        
+        .icon-with-label {
+        display: flex;
+        flex-direction: column;
+        font-size: 14px;
+        }
+
+        .icon-with-label i {
+        font-size: 24px; /* 아이콘 크기 조정 */
+        }
+
+        
+        .search-box {
+            width: 50%;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 30px;
+            box-sizing: border-box;
+        }
+        .search-button {
+            background-color: #1ec800;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .search-button:hover {
+            background-color: #17a600;
+        }
+    </style>
+</body>
+</html>
