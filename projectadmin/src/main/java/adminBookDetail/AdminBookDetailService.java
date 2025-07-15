@@ -1,5 +1,7 @@
 package adminBookDetail;
 
-public class AdminBookDetailService {
+import domain.Book;
 
+public interface AdminBookDetailService {
+    Book getBookDetail(int bookId);
 }

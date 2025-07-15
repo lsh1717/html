@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapper namespace="adminBookDetail.AdminBookDetailRepository">
+
+  <select id="selectBookById" parameterType="int" resultType="domain.Book">
+    SELECT * FROM book WHERE book_id = #{bookId}
+  </select>
+
+</mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapper namespace="adminBookList.AdminBookListRepository">
+
+  <insert id="insertBook" parameterType="domain.Book">
+    INSERT INTO book(book_id, title, author, publisher, price, stock, description)
+    VALUES (book_seq.NEXTVAL, #{title}, #{author}, #{publisher}, #{price}, #{stock}, #{description})
+  </insert>
+
+  <update id="updateBook" parameterType="domain.Book">
+    UPDATE book
+    SET title = #{title},
+        author = #{author},
+        publisher = #{publisher},
+        price = #{price},
+        stock = #{stock},
+        description = #{description}
+    WHERE book_id = #{bookId}
+  </update>
+
+  <delete id="deleteBook" parameterType="int">
+    DELETE FROM book WHERE book_id = #{bookId}
+  </delete>
+
+  <select id="selectBookById" parameterType="int" resultType="domain.Book">
+    SELECT * FROM book WHERE book_id = #{bookId}
+  </select>
+
+  <select id="selectAllBooks" resultType="domain.Book">
+    SELECT * FROM book ORDER BY book_id DESC
+  </select>
+
+</mapper>
