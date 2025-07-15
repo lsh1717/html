@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapper namespace="com.example.projectname.manager.mapper.ManagerMapper">
+
+  <!-- 등록 -->
+  <insert id="insertBook" parameterType="Book">
+    INSERT INTO book(book_id, title, author, publisher, price, stock, description)
+    VALUES (book_seq.NEXTVAL, #{title}, #{author}, #{publisher}, #{price}, #{stock}, #{description})
+  </insert>
+
+  <!-- 수정 -->
+  <update id="updateBook" parameterType="Book">
+    UPDATE book
+    SET title = #{title},
+        author = #{author},
+        publisher = #{publisher},
+        price = #{price},
+        stock = #{stock},
+        description = #{description}
+    WHERE book_id = #{bookId}
+  </update>
+
+  <!-- 삭제 -->
+  <delete id="deleteBook" parameterType="int">
+    DELETE FROM book WHERE book_id = #{bookId}
+  </delete>
+
+ 
+
+</mapper>
