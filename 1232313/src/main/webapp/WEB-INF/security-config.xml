@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-5.6.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <security:http auto-config="true" use-expressions="true">
+    
+     <security:intercept-url pattern="/login/login" access="permitAll" />
+     <security:intercept-url pattern="/login/register" access="permitAll" />
+        <security:intercept-url pattern="/**" access="isAuthenticated()" />
+        
+        <security:form-login 
+            login-page="/login/login"  
+            default-target-url="/user/bookList" 
+            authentication-failure-url="/login/login?error=true"
+            username-parameter="username"
+            password-parameter="password"
+            authentication-success-handler-ref="loginSuccess" />
+            
+        <security:access-denied-handler ref="accessDenied" />  
+                
+        <security:logout logout-url="/logout" 
+                         logout-success-url="/login/login?logout=true" />
+                         
+        <security:http-basic entry-point-ref="authenticationEntryPoint" />
+    </security:http>
+   	
+   	<bean id="loginSuccess" class="login.CustomerLoginSuccessHandler"/>
+   	<bean id="accessDenied" class="login.CustomerLoginDeniedHandler"/>
+   
+    <security:authentication-manager>
+        <security:authentication-provider user-service-ref="loginService">
+            <security:password-encoder ref="bpe"/>
+        </security:authentication-provider>
+    </security:authentication-manager>
+    
+    <bean id="bpe" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+
+    <bean id="authenticationEntryPoint" 
+          class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+        <constructor-arg name="loginFormUrl" value="/login/login"/>
+    </bean>
+</beans>
