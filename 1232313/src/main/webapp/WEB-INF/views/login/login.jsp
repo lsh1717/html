@@ -32,6 +32,7 @@
                                 <a href="/login/register" class="btn btn-secondary">회원가입</a>
                             </div>
                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token }" />
+                            <input type="hidden" name="role" value="USER" />
                         </form>
                     </div>
                     <div class="card-footer text-muted text-center">

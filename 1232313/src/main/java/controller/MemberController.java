@@ -32,6 +32,6 @@ public class MemberController {
                 ? "회원가입이 완료되었습니다. 로그인 후 이용해주세요."
                 : "이미 존재하는 아이디입니다. 다시 시도해주세요.";
         redirectAttributes.addFlashAttribute("result", result);
-        return "redirect:/" + (registered ? "login/login" : "member/register");
+        return "redirect:/" + (registered ? "login/login" : "login/register");
     }
 }

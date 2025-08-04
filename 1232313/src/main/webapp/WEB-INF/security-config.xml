@@ -20,6 +20,11 @@
             authentication-success-handler-ref="loginSuccess" />
             
         <security:access-denied-handler ref="accessDenied" />  
+        
+        <!-- <security:form-login 
+        login-page="/login/login" 
+        default-target-url="/" 
+        authentication-failure-url="/login/login?error=true" /> --> <!--컨트롤러 없이 하는 버전 아직 미완성  -->
                 
         <security:logout logout-url="/logout" 
                          logout-success-url="/login/login?logout=true" />

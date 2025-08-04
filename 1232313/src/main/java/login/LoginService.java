@@ -26,7 +26,7 @@ import vo.Member;
 public class LoginService implements UserDetailsService {
 
 	@Autowired
-	SqlSessionFactory sqlSessionFactory;
+	SqlSessionFactory sqlSessionFactory;//db구축 방식
 
 	/**
 	 * 로그인 요청 시 호출됨. username(아이디)로 사용자 정보를 조회하고
@@ -44,22 +44,30 @@ public class LoginService implements UserDetailsService {
 		// 3) 아이디(username)를 통해 사용자 정보 조회
 		Member member = memberDao.findByUsername(username);
 
+		 if (member == null) {
+		        // 사용자 없으면 예외 던짐
+		        throw new UsernameNotFoundException("User not found with username: " + username);
+		    }
+		 System.out.println("LoginId: " + member.getLoginId());
+		 System.out.println("Password: " + member.getPassword());
+		 System.out.println("Role: " + member.getRole());
+		 
 		// 4) 권한 리스트 생성
 		List<GrantedAuthority> authorities = new ArrayList<>();
 
 		// 사용자 역할(role)에 따라 권한 추가
-		if (member.getRole().equals("ROLE_ADMIN")) {
+		if (member.getRole().equals("ADMIN")) {
 			// 관리자면 두 가지 권한 부여
-			authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-			authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-		} else if (member.getRole().equals("ROLE_USER")) {
+			authorities.add(new SimpleGrantedAuthority("ADMIN"));
+			authorities.add(new SimpleGrantedAuthority("CUSTOMER"));
+		} else if (member.getRole().equals("CUSTOMER")) {
 			// 일반 사용자면 사용자 권한만
-			authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+			authorities.add(new SimpleGrantedAuthority("CUSTOMER"));
 		}
 
 		// 5) UserDetails 객체 생성
 		// 로그인 성공 시 Spring Security 내부에서 사용될 User 객체 리턴
-		User user = new User(member.getLogin_id(), member.getPassword(), authorities);
+		User user = new User(member.getLoginId(), member.getPassword(), authorities);
 
 		// ※ 주의: 비밀번호는 BCrypt 등으로 암호화되어 있어야 함 (여기선 암호화 안 했다고 가정)
 

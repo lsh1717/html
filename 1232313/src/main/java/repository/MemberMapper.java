@@ -15,33 +15,28 @@ import vo.Member;
 @Mapper
 public interface MemberMapper {
 
-	@Insert("INSERT INTO users(login_id, name, email, password, hp, role) "
-		      + "VALUES (#{login_id, jdbcType=VARCHAR}, #{name, jdbcType=VARCHAR}, #{email, jdbcType=VARCHAR}, "
-		      + "#{password, jdbcType=VARCHAR}, #{hp, jdbcType=VARCHAR}, #{role, jdbcType=VARCHAR})")
-		@Options(useGeneratedKeys=true, keyProperty="user_id", keyColumn="user_id")
-		int save(Member member);
-	
+    @Insert("INSERT INTO users(login_id, name, email, password, hp, role) "
+          + "VALUES (#{loginId, jdbcType=VARCHAR}, #{name, jdbcType=VARCHAR}, #{email, jdbcType=VARCHAR}, "
+          + "#{password, jdbcType=VARCHAR}, #{hp, jdbcType=VARCHAR}, #{role, jdbcType=VARCHAR})")
+    @Options(useGeneratedKeys = true, keyProperty = "userId", keyColumn = "user_id")
+    int save(Member member);
+
     @Select("SELECT * FROM users")
     List<Member> findAll();
 
-    @Select("SELECT * FROM users WHERE user_id = #{user_id, jdbcType=INTEGER}")
-    Member findByUserId(Integer user_id);
+    @Select("SELECT * FROM users WHERE user_id = #{userId, jdbcType=INTEGER}")
+    Member findByUserId(Integer userId);
 
-    @Select("SELECT * FROM users WHERE login_id = #{username}")
+    @Select("SELECT user_id, login_id AS loginId, name, email, password, hp, role FROM users WHERE login_id = #{username}")
     Member findByUsername(String username);
 
     @Update("UPDATE users SET name = #{name}, "
-            + "email = #{email}, "
-            + "phone_number = #{hp}, "
-            + "password = #{password} "
-            + "WHERE user_id = #{user_id}")
-      int update(Member member);
+          + "email = #{email}, "
+          + "hp = #{hp}, "
+          + "password = #{password} "
+          + "WHERE user_id = #{userId}")
+    int update(Member member);
 
-    @Delete("DELETE FROM users WHERE user_id = #{user_id}")
-    int delete(@Param("user_id") int user_id);
-    
-    
-   
-    
-    
+    @Delete("DELETE FROM users WHERE user_id = #{userId}")
+    int delete(@Param("userId") int userId);
 }

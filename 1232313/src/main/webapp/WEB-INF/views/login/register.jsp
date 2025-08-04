@@ -17,10 +17,10 @@
 						<h3 class="mb-0">회원가입</h3>
 					</div>
 					<div class="card-body">
-						<form action="register" method="post">
+						<form action="/login/register" method="post">
 							<div class="mb-3">
 								<label for="username" class="form-label">아이디</label>
-								<input type="text" class="form-control" id="username" name="username" placeholder="아이디를 입력하세요">
+								<input type="text" class="form-control" id="login_id" name="loginId" placeholder="아이디를 입력하세요">
 							</div>
 							<div class="mb-3">
 								<label for="password" class="form-label">비밀번호</label>
@@ -44,6 +44,7 @@
 							</div>
 							
 							<input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token }" />
+							<input type="hidden" name="role" value="CUSTOMER" />
 						</form>
 					</div>
 					<div class="card-footer text-center">
