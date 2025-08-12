@@ -48,16 +48,7 @@ public class UserController {
         model.addAttribute("bodyPage", "user/bookList"); // include용 경로
         return "user/layout"; // 메인 템플릿
     }
-    @GetMapping("/user/cart")
-    public String cart(Model model) {
-        // TODO: 장바구니 항목을 세션 또는 서비스에서 불러오는 로직 추가
-        // 예시: List<CartItem> cartItems = cartService.getCartItemsForUser(userId);
-
-        // 일단 더미 데이터 없이 템플릿만 연결
-        model.addAttribute("pageTitle", "장바구니");
-        model.addAttribute("bodyPage", "user/cart"); // JSP 경로: /WEB-INF/views/user/cart.jsp
-        return "user/layout"; // 메인 템플릿 layout.jsp (include bodyPage)
-    }
+ 
     
     @GetMapping("/user/bookDetail/{bookId}")
     public String bookDetail(@PathVariable("bookId") Long bookId, Model model) {

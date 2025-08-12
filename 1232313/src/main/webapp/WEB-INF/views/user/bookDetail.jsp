@@ -20,6 +20,7 @@
       <p><strong>재고:</strong> ${book.stock}권</p>
 
       <form action="${ctx}/cart/add" method="post" class="mt-4">
+       <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
         <input type="hidden" name="bookId" value="${book.bookId}" />
         <div class="form-group row">
           <label for="quantity" class="col-sm-2 col-form-label">수량</label>
