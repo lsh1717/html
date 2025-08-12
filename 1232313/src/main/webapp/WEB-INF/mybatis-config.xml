@@ -12,7 +12,7 @@
 	<context:property-placeholder location="classpath:db.properties" />
 
 	<!-- MyBatis Mapper 자동 스캔 -->
-	<mybatis-spring:scan base-package="member,bookList,bookDetail,login" />
+	<mybatis-spring:scan base-package="login,repository,controller,service,vo" />
 
 	<!-- SqlSessionFactory 설정 추가 -->
 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">

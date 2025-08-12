@@ -121,7 +121,7 @@ form {
   <h2>${pageTitle}</h2>
 
   <!-- 검색 폼 -->
-  <form action="${ctx}/bookList" method="get" class="mb-3">
+  <form action="${ctx}/user/bookList" method="get" class="mb-3">
     <div class="input-group">
       <input type="text" name="keyword" value="${keyword}" class="form-control"
              placeholder="제목 검색" />
@@ -135,18 +135,19 @@ form {
     <c:forEach var="book" items="${books}">
       <div class="col-md-3 mb-4 d-flex">
         <div class="card w-100">
-          <img src="${book.coverImage}"
-               class="card-img-top" alt="Cover">
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">
-              <a href="${ctx}/bookDetail/${book.bookId}">
-                ${book.title}
-              </a>
-            </h5>
-            <p class="card-text mb-1">저자: ${book.author}</p>
-            <p class="card-text mt-auto"><strong>${book.price}원</strong></p>
-          </div>
-        </div>
+  <a href="${ctx}/user/bookDetail/${book.bookId}">
+    <img src="${book.cover_image}" class="card-img-top" alt="Cover">
+  </a>
+  <div class="card-body d-flex flex-column">
+    <h5 class="card-title">
+      <a href="${ctx}/user/bookDetail/${book.bookId}">
+        ${book.title}
+      </a>
+    </h5>
+    <p class="card-text mb-1">저자: ${book.author}</p>
+    <p class="card-text mt-auto"><strong>${book.price}원</strong></p>
+  </div>
+</div>
       </div>
     </c:forEach>
 

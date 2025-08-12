@@ -2,26 +2,32 @@ package service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import vo.Book;
+import repository.BookMapper;
 
 @Service
 public class BookService {
 
-	public List<Book> getAllBooks() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Autowired
+    private BookMapper bookMapper;
 
-	public List<Book> getPagedBooks(String keyword, int page, int pageSize) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public List<Book> getAllBooks() {
+        return bookMapper.findAll();
+    }
 
-	public int getTotalCount(String keyword) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+    public List<Book> getPagedBooks(String keyword, int page, int pageSize) {
+        int startRow = (page - 1) * pageSize;
+        return bookMapper.findPageByKeyword(keyword, startRow, pageSize);
+    }
 
+    public int getTotalCount(String keyword) {
+        return bookMapper.countByKeyword(keyword);
+    }
+
+    public Book getBookById(Long bookId) {
+		return bookMapper.selectBookById(bookId);
+	}
 }
