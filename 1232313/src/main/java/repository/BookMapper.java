@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import vo.Book;
 
@@ -35,4 +36,7 @@ public interface BookMapper {
 
     @Select("SELECT book_id AS bookId, title, author, description, price, stock, cover_image FROM books WHERE book_id = #{bookId}")
     Book selectBookById(@Param("bookId") Long bookId);
+
+    @Update("UPDATE books SET stock = #{stock} WHERE book_id = #{bookId}")
+    void updateBookStock(Book book);
 }

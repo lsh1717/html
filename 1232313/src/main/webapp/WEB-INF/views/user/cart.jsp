@@ -76,7 +76,7 @@
     <!-- ✅ 총합 및 결제 -->
     <div class="text-right">
       <h4>총 합계: <strong>${total}원</strong></h4>
-      <form action="${ctx}/order/checkout" method="post" class="mt-3">
+      <form action="${ctx}/user/payment" method="post" class="mt-3">
         <!-- CSRF 토큰 필드 추가 -->
         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
         <button type="submit" class="btn btn-success btn-lg">결제하기</button>

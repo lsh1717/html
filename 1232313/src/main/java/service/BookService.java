@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import vo.Book;
+import vo.CartItem;
 import repository.BookMapper;
 
 @Service
@@ -30,4 +31,22 @@ public class BookService {
     public Book getBookById(Long bookId) {
 		return bookMapper.selectBookById(bookId);
 	}
+
+    public boolean processPayment(List<CartItem> cartItems) {
+        for (CartItem item : cartItems) {
+            Book book = bookMapper.selectBookById(item.getBook().getBookId());
+
+            if (book == null || book.getStock() < item.getQuantity()) {
+                return false; // 재고 부족 시 실패 처리
+            }
+
+            // 재고 차감
+            book.setStock(book.getStock() - item.getQuantity());
+            bookMapper.updateBookStock(book); // 재고 업데이트 쿼리 필요
+        }
+
+        // (선택) 주문 기록 저장도 여기서 처리 가능
+
+        return true;
+    }
 }

@@ -11,6 +11,7 @@ import java.util.Objects;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -168,4 +169,37 @@ public class CartController {
         cartCookie.setMaxAge(7 * 24 * 60 * 60);  // 7일간 유지
         response.addCookie(cartCookie);
     }
+    
+    @GetMapping("/user/payment")
+    public String showPaymentPage(HttpServletRequest request, Model model) throws Exception {
+        List<CartItem> cartItems = getCartFromCookies(request);
+
+        if (cartItems == null || cartItems.isEmpty()) {
+            model.addAttribute("error", "장바구니가 비어있습니다.");
+            return "redirect:/user/bookList";
+        }
+
+        // 책 정보 채워넣기
+        for (CartItem item : cartItems) {
+            Book book = bookService.getBookById(item.getBookId());
+            if (book != null) {
+                item.setBook(book);
+            }
+        }
+
+        // 총 합계 계산 (null 방지)
+        int total = 0;
+        for (CartItem item : cartItems) {
+            if (item.getBook() != null) {
+              total += item.getQuantity() * item.getBook().getPrice();
+            }
+        }
+
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("total", total);
+        model.addAttribute("pageTitle", "결제하기");
+        model.addAttribute("bodyPage", "user/payment");
+        return "user/layout";
+    }
+    
 }
