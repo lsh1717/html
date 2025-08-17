@@ -30,7 +30,8 @@
         <security:access-denied-handler ref="accessDenied" />
 
         <security:logout logout-url="/logout"
-                         logout-success-url="/login/login?logout=true" />
+                         logout-success-url="/login/login?logout=true"
+                         delete-cookies="JSESSIONID,cart" />
 
         <security:http-basic entry-point-ref="authenticationEntryPoint" />
     </security:http>

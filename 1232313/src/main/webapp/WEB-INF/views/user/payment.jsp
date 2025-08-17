@@ -23,16 +23,16 @@
                     <c:forEach var="item" items="${cartItems}">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <strong>${item.bookTitle}</strong><br>
+                                <strong>${item.book.title}</strong><br>
                                 <small class="text-muted">수량: ${item.quantity}</small>
                             </div>
-                            <span>${item.price}원</span>
+                            <span>${item.book.price}원</span>
                         </li>
                     </c:forEach>
                 </ul>
                 <div class="card-footer d-flex justify-content-between">
                     <strong>총 금액</strong>
-                    <strong class="text-danger">${totalPrice}원</strong>
+                    <strong class="text-danger">${total}원</strong>
                 </div>
             </div>
         </div>
@@ -45,33 +45,17 @@
                 </div>
                 <div class="card-body">
                     <form action="/user/payment/complete" method="post">
-                        <div class="mb-3">
-                            <label class="form-label">이름</label>
-                            <input type="text" name="name" class="form-control" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">주소</label>
-                            <input type="text" name="address" class="form-control" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">결제 수단</label>
-                            <select name="paymentMethod" class="form-select" required>
-                                <option value="">-- 결제 수단 선택 --</option>
-                                <option value="card">신용카드</option>
-                                <option value="bank">계좌이체</option>
-                                <option value="mobile">휴대폰 결제</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">카드/계좌번호</label>
-                            <input type="text" name="accountNumber" class="form-control" required>
-                        </div>
-
-                        <button type="submit" class="btn btn-success w-100">결제하기</button>
-                    </form>
+    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+    <div class="mb-3">
+        <label class="form-label">이름</label>
+        <input type="text" name="name" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">주소</label>
+        <input type="text" name="address" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-success w-100">결제하기</button>
+</form>
                 </div>
             </div>
         </div>

@@ -1,5 +1,7 @@
 package controller;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,17 @@ public class UserController {
         // 해당 페이지 도서 목록 가져오기
         List<Book> books = bookService.getPagedBooks(keyword, page, pageSize);
 
+        // --- 추천 도서 랜덤 선택 (기존 책 중에서) ---
+        List<Book> recommendedBooks = new ArrayList<>();
+        List<Book> allBooks = bookService.getAllBooks(); // 전체 책 가져오기
+        Collections.shuffle(allBooks); // 무작위 섞기
+        for (int i = 0; i < Math.min(3, allBooks.size()); i++) {
+            recommendedBooks.add(allBooks.get(i));
+        }
+
+        // 모델에 전달
         model.addAttribute("books", books);
+        model.addAttribute("recommendedBooks", recommendedBooks); // 추천도서
         model.addAttribute("keyword", keyword);
         model.addAttribute("page", page);
         model.addAttribute("totalPage", totalPage);
@@ -48,8 +60,7 @@ public class UserController {
         model.addAttribute("bodyPage", "user/bookList"); // include용 경로
         return "user/layout"; // 메인 템플릿
     }
- 
-    
+
     @GetMapping("/user/bookDetail/{bookId}")
     public String bookDetail(@PathVariable("bookId") Long bookId, Model model) {
         Book book = bookService.getBookById(bookId); // 상세 정보 가져오기
@@ -58,8 +69,4 @@ public class UserController {
         model.addAttribute("bodyPage", "user/bookDetail"); // 상세 페이지 경로
         return "user/layout"; // 공통 레이아웃 사용
     }
-    
-   
-    
-    
 }
