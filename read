@@ -1,6 +1,6 @@
-기능 -> 결제까지만 완료
-페이징, 추천도서, 검색 완료
-주문 관리 미완료
+메인 화면 URL-> http://localhost:8888/
+기능 -> 주문내역까지 완료
+관리자 계정으로 들어가면 관리자 대시보드 나오게 구현 (기능X)
 
 db.properties 고치기
 
@@ -26,3 +26,8 @@ FOREIGN KEY(order_id) REFERENCES orders(order_id),
 CONSTRAINT fk_book
 FOREIGN KEY(book_id) REFERENCES books(book_id)
 );
+
+CREATE SEQUENCE seq_orders START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE seq_order_items START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+commit;
