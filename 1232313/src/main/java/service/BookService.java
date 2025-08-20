@@ -3,6 +3,8 @@ package service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import repository.BookMapper;
@@ -19,7 +21,7 @@ public class BookService {
     private BookMapper bookMapper;
 
     @Autowired
-    private OrderMapper orderMapper; // 주문 처리용 Mapper 추가
+    private OrderMapper orderMapper; // 주문 처리용 Mapper
 
     // ---------------------------
     // 도서 조회 관련
@@ -41,52 +43,51 @@ public class BookService {
         return bookMapper.selectBookById(bookId);
     }
 
+    // 전체 도서 개수 (대시보드용)
+    public int countBooks() {
+        return bookMapper.countAll();
+    }
+
     // ---------------------------
     // 결제 처리
     // ---------------------------
     public boolean processPayment(List<CartItem> cartItems) {
-        // 1️⃣ 재고 확인 및 차감
         for (CartItem item : cartItems) {
             Book book = bookMapper.selectBookById(item.getBook().getBookId());
 
             if (book == null || book.getStock() < item.getQuantity()) {
-                return false; // 재고 부족 시 결제 실패
+                return false;
             }
 
             book.setStock(book.getStock() - item.getQuantity());
             bookMapper.updateBookStock(book);
         }
 
-        // 2️⃣ 주문 기록 생성
         Orders order = new Orders();
-        order.setUserId(getCurrentMemberId()); // 로그인된 회원 ID
-        orderMapper.insertOrder(order); // PK(orderId) 자동 생성
+        order.setUserId(getCurrentMemberId());
+        orderMapper.insertOrder(order);
 
-        // 3️⃣ 주문 상세(OrderItem) 기록 생성
         for (CartItem item : cartItems) {
             OrderItem orderItem = new OrderItem();
             orderItem.setOrderId(order.getOrderId());
             orderItem.setBookId(item.getBook().getBookId());
             orderItem.setQuantity(item.getQuantity());
-            orderItem.setPrice(item.getBook().getPrice()); // 주문 당시 가격
+            orderItem.setPrice(item.getBook().getPrice());
             orderMapper.insertOrderItem(orderItem);
         }
 
-        return true; // 결제 성공
+        return true;
     }
 
-    // ---------------------------
-    // 재고 업데이트
-    // ---------------------------
     public void updateBookStock(Book book) {
         bookMapper.updateBookStock(book);
     }
 
-    // ---------------------------
-    // 현재 로그인 회원 ID 가져오기 (구현 필요)
-    // ---------------------------
     private Long getCurrentMemberId() {
-        // 예시: SecurityContextHolder에서 회원 ID 가져오기
-        return 1L; // 테스트용 임시값
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            return 1L; // TODO: MemberMapper로 username → userId 변환 필요
+        }
+        return null;
     }
 }

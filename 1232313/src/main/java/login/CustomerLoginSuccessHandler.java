@@ -23,12 +23,12 @@ public class CustomerLoginSuccessHandler implements AuthenticationSuccessHandler
 			    .map(GrantedAuthority::getAuthority)
 			    .collect(Collectors.toSet());
 
-		if(roleNames.contains("ADMIN")) {
-			response.sendRedirect("/manager/bookList"); //pageController에서 모두 처리
-		}else if(roleNames.contains("CUSTOMER")) {
-			response.sendRedirect("/user/bookList");
-		}else {
-			response.sendRedirect("/login/login");
+		if (roleNames.contains("ROLE_ADMIN")) {
+		    response.sendRedirect("/admin/dashboard"); 
+		} else if (roleNames.contains("ROLE_CUSTOMER")) {
+		    response.sendRedirect("/user/bookList");
+		} else {
+		    response.sendRedirect("/login/login");
 		}
 		
 	}

@@ -1,5 +1,5 @@
-<%@ page contentType="text/html;charset=UTF-8" %>
-
-<footer style="padding:10px; background:#f0f0f0; text-align:center;">
-  <p>&copy; 2025 BookShop. All rights reserved.</p>
+<footer class="footer mt-5 py-3 bg-light">
+  <div class="container">
+    <span class="text-muted">© 2025 BookStore Admin</span>
+  </div>
 </footer>

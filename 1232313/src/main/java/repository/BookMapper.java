@@ -1,11 +1,7 @@
 package repository;
 
 import java.util.List;
-
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 import vo.Book;
 
@@ -39,4 +35,8 @@ public interface BookMapper {
 
     @Update("UPDATE books SET stock = #{stock} WHERE book_id = #{bookId}")
     void updateBookStock(Book book);
+
+    // 📊 전체 도서 개수 (대시보드용)
+    @Select("SELECT COUNT(*) FROM books")
+    int countAll();
 }

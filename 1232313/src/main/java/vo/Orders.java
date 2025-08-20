@@ -14,6 +14,5 @@ public class Orders {
     private BigDecimal totalAmount;
     private String status;
 
-    // 주문에 속한 아이템 리스트
-    private List<OrderItem> items;
+    private List<OrderItem> items; // 주문 아이템 리스트
 }

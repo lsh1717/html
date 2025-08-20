@@ -12,8 +12,8 @@
     </h1>
 
     <nav class="d-flex align-items-center gap-2">
-      <!-- 전체보기 링크 -->
-      <a href="${ctx}/user/bookList" class="btn btn-link p-0 mr-3">전체보기</a>
+      <!-- 🔹 마이페이지 버튼 -->
+      <a href="${ctx}/user/mypage" class="btn btn-link p-0 mr-3">마이페이지</a>
 
       <!-- 장바구니 버튼 -->
       <a href="${ctx}/cart/view" class="btn btn-primary d-flex align-items-center px-3 py-1 mr-3">

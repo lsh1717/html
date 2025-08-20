@@ -3,52 +3,71 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:security="http://www.springframework.org/schema/security"
        xsi:schemaLocation="
-           http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-5.6.xsd
-           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-5.6.xsd">
 
+    <!-- ======================= 보안 규칙 ======================= -->
     <security:http auto-config="true" use-expressions="true">
-        
-        <!-- 로그인, 회원가입, 장바구니, 북리스트, 홈은 로그인 안 해도 접근 허용 -->
-        <security:intercept-url pattern="/login/login" access="permitAll" />
-        <security:intercept-url pattern="/login/register" access="permitAll" />
-        <security:intercept-url pattern="/cart/**" access="permitAll" />
-        <security:intercept-url pattern="/user/bookDetail/**" access="permitAll" />
-        <security:intercept-url pattern="/" access="permitAll" />
-        <security:intercept-url pattern="/user/bookList" access="permitAll" />
 
-        <!-- 나머지는 로그인 필요 -->
-        <security:intercept-url pattern="/**" access="isAuthenticated()" />
+       <!-- 로그인 없이 접근 가능 -->
+<security:intercept-url pattern="/login/login" access="permitAll" />
+<security:intercept-url pattern="/login/register" access="permitAll" />
+<security:intercept-url pattern="/user/bookList" access="permitAll" />
+<security:intercept-url pattern="/user/bookDetail/**" access="permitAll" />
+<security:intercept-url pattern="/" access="permitAll" />
 
+<!-- 🛒 장바구니 / 주문 : 로그인 안 해도 접근 가능 -->
+<security:intercept-url pattern="/cart/**" access="permitAll" />
+<security:intercept-url pattern="/order/**" access="permitAll" />
+
+<!-- 관리자 전용 -->
+<security:intercept-url pattern="/admin/**" access="hasRole('ADMIN')" />
+
+<!-- 일반 사용자 -->
+<security:intercept-url pattern="/user/**" access="hasAnyRole('CUSTOMER','ADMIN')" />
+
+<!-- 마지막 catch-all -->
+<security:intercept-url pattern="/**" access="isAuthenticated()" />
+
+        <!-- 로그인 설정 -->
         <security:form-login
             login-page="/login/login"
-            default-target-url="/user/bookList"
             authentication-failure-url="/login/login?error=true"
             username-parameter="username"
             password-parameter="password"
             authentication-success-handler-ref="loginSuccess" />
 
+        <!-- 접근 거부 핸들러 -->
         <security:access-denied-handler ref="accessDenied" />
 
+        <!-- 로그아웃 -->
         <security:logout logout-url="/logout"
                          logout-success-url="/login/login?logout=true"
                          delete-cookies="JSESSIONID,cart" />
-
-        <security:http-basic entry-point-ref="authenticationEntryPoint" />
     </security:http>
 
-    <bean id="loginSuccess" class="login.CustomerLoginSuccessHandler"/>
-    <bean id="accessDenied" class="login.CustomerLoginDeniedHandler"/>
-
+    <!-- ======================= Authentication Manager ======================= -->
     <security:authentication-manager>
         <security:authentication-provider user-service-ref="loginService">
             <security:password-encoder ref="bpe"/>
         </security:authentication-provider>
     </security:authentication-manager>
 
+    <!-- ======================= Bean 정의 ======================= -->
+    <!-- 비밀번호 암호화기 -->
     <bean id="bpe" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
 
-    <bean id="authenticationEntryPoint" 
-          class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
-        <constructor-arg name="loginFormUrl" value="/login/login"/>
+    <!-- 권한 매퍼 (ROLE_ 제거, 대문자 변환) -->
+    <bean id="authorityMapper"
+          class="org.springframework.security.core.authority.mapping.SimpleAuthorityMapper">
+        <property name="convertToUpperCase" value="true"/>
+        <property name="prefix" value=""/>
     </bean>
+
+    <!-- 로그인 성공 핸들러 -->
+    <bean id="loginSuccess" class="login.CustomerLoginSuccessHandler"/>
+
+    <!-- 접근 거부 핸들러 -->
+    <bean id="accessDenied" class="login.CustomerLoginDeniedHandler"/>
+
 </beans>

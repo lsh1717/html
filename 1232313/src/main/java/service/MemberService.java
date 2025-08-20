@@ -1,7 +1,6 @@
 package service;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,7 +37,7 @@ public class MemberService {
     
     public int findId(String username) {
         Member member = memberMapper.findByUsername(username);
-        if(member == null) return -1; // 없으면 -1 리턴
+        if(member == null) return -1;
         return member.getUserId();
     }
 
@@ -50,13 +49,10 @@ public class MemberService {
         return null;
     }
 
-    // 회원가입 처리: 로그인 아이디(loginId) 중복 체크
     public boolean registerMember(Member member) {
         Member existingMember = memberMapper.findByUsername(member.getLoginId());
         if(existingMember != null) return false;
 
-        // 폼에서 넘어온 role을 그대로 저장
-        // 만약 role이 null 이면 기본값으로 "ROLE_USER" 설정
         if (member.getRole() == null || member.getRole().isEmpty()) {
             member.setRole("CUSTOMER");
         }
@@ -79,5 +75,14 @@ public class MemberService {
 
         memberMapper.save(member);
         return true; 
+    }
+
+    public Member getMemberByLoginId(String loginId) {
+        return memberMapper.findByUsername(loginId);
+    }
+
+    // 📊 회원 수 카운트 (대시보드용)
+    public int countUsers() {
+        return memberMapper.countAll();
     }
 }
