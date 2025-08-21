@@ -29,7 +29,9 @@ public interface MemberMapper {
     @Delete("DELETE FROM users WHERE user_id = #{userId}")
     int delete(@Param("userId") Integer userId);
 
-    // 📊 전체 회원 수 (대시보드용)
+    // �윋� �쟾泥� �쉶�썝 �닔 (���떆蹂대뱶�슜)
     @Select("SELECT COUNT(*) FROM users")
     int countAll();
+    
+    
 }

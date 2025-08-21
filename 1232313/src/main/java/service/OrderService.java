@@ -32,18 +32,23 @@ public class OrderService {
         return orderMapper.findOrderItemsByOrderId(orderId);
     }
 
-    // 📊 오늘 주문 수
+    // �윋� �삤�뒛 二쇰Ц �닔
     public int countTodayOrders() {
         return orderMapper.countTodayOrders();
     }
 
-    // 📊 오늘 매출 합계
+    // �윋� �삤�뒛 留ㅼ텧 �빀怨�
     public int todayRevenue() {
         return orderMapper.sumTodayRevenue();
     }
 
-    // 📊 최근 주문 n개
+    // �윋� 理쒓렐 二쇰Ц n媛�
     public List<Orders> findRecentOrders(int limit) {
         return orderMapper.findRecentOrders(limit);
     }
+    
+    public int sumTodayRevenue(){ return orderMapper.sumTodayRevenue(); }
+    public List<Orders> findRecent(int limit){ return orderMapper.findRecent(limit); }
+    public List<java.util.Map<String,Object>> monthlyRevenue(int months){ return orderMapper.monthlyRevenue(months); }
+    public List<java.util.Map<String,Object>> statusCounts(){ return orderMapper.statusCounts(); }
 }

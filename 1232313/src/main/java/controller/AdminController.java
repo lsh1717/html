@@ -1,45 +1,114 @@
 package controller;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import vo.Order;
+import service.BookService;
+import service.MemberService;
+import service.OrderService;
+import vo.Book;
+import vo.Orders;
 
 @Controller
 public class AdminController {
 
+    @Autowired private MemberService memberService;
+    @Autowired private BookService bookService;
+    @Autowired private OrderService orderService;
+
     @RequestMapping("/admin/dashboard")
-    public String dashboard(Model model) {
-        // ÏòàÏãú Îç∞Ïù¥ÌÑ∞
-        int totalUsers = 120;
-        int totalBooks = 450;
-        int todayOrders = 15;
-        int todayRevenue = 125000;
+    public String dashboard(Model model) throws Exception {
 
-        List<Order> recentOrders = Arrays.asList(
-            new Order(1, "user01", 32000),
-            new Order(2, "user02", 48000)
-        );
+        // === KPI (≥Œ πÊæÓ¿˚¿∏∑Œ 0 µ∆˙∆Æ) ===
+        int totalUsers   = safeInt(() -> memberService.countUsers());
+        int totalBooks   = safeInt(() -> bookService.countBooks());
+        int todayOrders  = safeInt(() -> orderService.countTodayOrders());
+        int todayRevenue = safeInt(() -> orderService.sumTodayRevenue());
 
-        String revenueLabels = "[\"3Ïõî\", \"4Ïõî\", \"5Ïõî\", \"6Ïõî\", \"7Ïõî\", \"8Ïõî\"]";
-        String revenueData   = "[120000, 95000, 110000, 150000, 170000, 140000]";
+        // === √÷±Ÿ ¡÷πÆ / ¿Á∞Ì ¿”π⁄ ===
+        List<Orders> recentOrders = orEmpty(orderService.findRecent(5));
+        List<Book>   lowStock     = orEmpty(bookService.findLowStockBooks(5, 5));
 
-        // Î™®Îç∏ ÏÜçÏÑ±
+        // === ø˘∫∞ ∏≈√‚ ===
+        List<Map<String,Object>> m = orEmpty(orderService.monthlyRevenue(6));
+        List<String> mLabels = m.stream()
+                .map(AdminController::labelFrom)
+                .collect(Collectors.toList());
+        List<Integer> mData  = m.stream()
+                .map(AdminController::valueFrom)
+                .collect(Collectors.toList());
+
+        // === ¡÷πÆ ªÛ≈¬ ∫–∆˜ ===
+        List<Map<String,Object>> s = orEmpty(orderService.statusCounts());
+        List<String> sLabels = s.stream().map(AdminController::labelFrom).collect(Collectors.toList());
+        List<Integer> sData  = s.stream().map(AdminController::valueFrom).collect(Collectors.toList());
+
+        // === ƒ´≈◊∞Ì∏Æ ∫–∆˜ (BookMapper.categoryCounts: CATEGORY/TOTAL ∑Œ ø») ===
+        List<Map<String,Object>> c = orEmpty(bookService.categoryCounts());
+        List<String> cLabels = c.stream().map(AdminController::labelFrom).collect(Collectors.toList());
+        List<Integer> cData  = c.stream().map(AdminController::valueFrom).collect(Collectors.toList());
+
+        // === JSON ¡˜∑ƒ»≠ (JSPø°º≠ ±◊¥Î∑Œ ${}∑Œ √‚∑¬ ∞°¥…) ===
+        ObjectMapper om = new ObjectMapper();
+        model.addAttribute("revenueLabels", om.writeValueAsString(mLabels));
+        model.addAttribute("revenueData",   om.writeValueAsString(mData));
+        model.addAttribute("statusLabels",  om.writeValueAsString(sLabels));
+        model.addAttribute("statusData",    om.writeValueAsString(sData));
+        model.addAttribute("categoryLabels",om.writeValueAsString(cLabels));
+        model.addAttribute("categoryData",  om.writeValueAsString(cData));
+
+        // === ∫‰ ∏µ® ===
         model.addAttribute("totalUsers", totalUsers);
         model.addAttribute("totalBooks", totalBooks);
         model.addAttribute("todayOrders", todayOrders);
         model.addAttribute("todayRevenue", todayRevenue);
         model.addAttribute("recentOrders", recentOrders);
-        model.addAttribute("revenueLabels", revenueLabels);
-        model.addAttribute("revenueData", revenueData);
+        model.addAttribute("lowStockBooks", lowStock);
 
-        // ‚úÖ contentPageÏóê ÏÉÅÎåÄÍ≤ΩÎ°úÎßå
-        model.addAttribute("contentPage", "dashboard.jsp");
-
-        return "admin/adminLayout"; // Î†àÏù¥ÏïÑÏõÉ JSP
+        return "admin/dashboard"; // /WEB-INF/views/admin/dashboard.jsp
     }
+
+    /* ==================== helpers ==================== */
+
+    // label ≈∞∏¶ ¥Î/º“πÆ¿⁄/¥Ÿ∏• ¿Ã∏ß±Ó¡ˆ æ»¿¸«œ∞‘ ªÃ±‚
+    private static String labelFrom(Map<String,Object> row) {
+        if (row == null) return "";
+        Object v = firstNonNull(row, "label", "LABEL", "category", "CATEGORY", "name", "NAME", "status", "STATUS");
+        return String.valueOf(v != null ? v : "");
+    }
+
+    // value/count/total µÓ æÓ∂≤ ≈∞ø©µµ æ»¿¸«œ∞‘ int √ﬂ√‚
+    private static Integer valueFrom(Map<String,Object> row) {
+        if (row == null) return 0;
+        Object v = firstNonNull(row, "value", "VALUE", "count", "COUNT", "total", "TOTAL");
+        if (v instanceof Number) return ((Number) v).intValue();
+        if (v != null) {
+            try { return Integer.parseInt(String.valueOf(v)); } catch (Exception ignore) {}
+        }
+        return 0;
+    }
+
+    private static Object firstNonNull(Map<String,Object> row, String... keys) {
+        for (String k : keys) {
+            if (row.containsKey(k) && row.get(k) != null) return row.get(k);
+        }
+        return null;
+    }
+
+    private static <T> List<T> orEmpty(List<T> list) {
+        return (list == null) ? Collections.emptyList() : list;
+    }
+
+    private static int safeInt(IntSupplierThrows s) {
+        try { return s.getAsInt(); } catch (Exception e) { return 0; }
+    }
+
+    @FunctionalInterface
+    interface IntSupplierThrows { int getAsInt() throws Exception; }
 }
