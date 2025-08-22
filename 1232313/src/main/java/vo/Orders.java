@@ -11,8 +11,8 @@ public class Orders {
     private Long orderId;
     private Long userId;
     private Date orderDate;
-    private BigDecimal totalAmount;
-    private String status;
+    private BigDecimal totalAmount; // ÁÖ¹® ÃÑ¾×
+    private String status;          // ¹è¼Û»óÅÂ PAID / SHIPPING / DELIVERED / CANCELLED
 
-    private List<OrderItem> items; // ì£¼ë¬¸ ì•„ì´í…œ ë¦¬ìŠ¤íŠ¸
+    private List<OrderItem> items;  // ÁÖ¹® ¾ÆÀÌÅÛ ¸®½ºÆ®
 }

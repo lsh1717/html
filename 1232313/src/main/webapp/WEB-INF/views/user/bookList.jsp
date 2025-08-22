@@ -1,233 +1,229 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c"   uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
+<c:set var="ttl" value="${empty pageTitle ? '도서 목록' : pageTitle}" />
 
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
-<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>${ttl} | BookShop</title>
 
-<style>
-/* 전체 공통 */
-body {
-  background: #f4f6fb;
-  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
-  color: #333;
-}
-h2 {
-  font-weight: 700;
-  margin-bottom: 25px;
-  color: #1a1a1a;
-  letter-spacing: -1px;
-  text-align: center;
-}
+  <!-- Fonts / Bootstrap -->
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
 
-/* 검색창 */
-.input-group {
-  max-width: 600px;
-  margin: 0 auto 40px auto;
-}
-.input-group .form-control {
-  border-radius: 30px 0 0 30px;
-  border: 1px solid #4A6CF7;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
-  font-size: 1rem;
-  height: 48px;
-}
-.input-group-append .btn {
-  border-radius: 0 30px 30px 0;
-  background: linear-gradient(135deg, #4A6CF7, #8E9CFA);
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  padding: 0 28px;
-  font-size: 1rem;
-  transition: 0.25s;
-}
-.input-group-append .btn:hover {
-  background: linear-gradient(135deg, #3a56c8, #6e7df5);
-}
+  <style>
+    :root{
+      --ink:#0f172a; --muted:#6b7280; --brand:#4F46E5; --ring:0 14px 36px rgba(16,24,40,.10);
+      --card:#ffffff; --bg:#f5f7fb;
+    }
+    html,body{height:100%;}
+    body{background:var(--bg); color:var(--ink); font-family:'Pretendard','Noto Sans KR',sans-serif;}
 
-/* 캐러셀 */
-.carousel-item img {
-  height: 320px;
-  object-fit: cover;
-  border-radius: 14px;
-}
-.carousel-caption {
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(6px);
-  border-radius: 10px;
-  padding: 12px 18px;
-}
-.carousel-caption h5 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #fff;
-}
+    /* ========= 헤더와 콘텐츠 간 ‘똑 떨어짐’ 해소 ========= */
+    .wrap{
+      min-height:100%;
+      padding:24px 16px 64px;          /* 상단 여백 줄임 */
+      position:relative; z-index:1;     /* 상단 그라데이션보다 위 */
+      display:block;
+    }
+    body::before{                       /* 헤더-콘텐츠 자연스러운 블렌딩 */
+      content:"";
+      position:fixed; left:0; right:0; top:0; height:120px;
+      background:linear-gradient(180deg,#ffffff 0%, rgba(255,255,255,.85) 42%, rgba(255,255,255,0) 100%);
+      pointer-events:none; z-index:0;
+    }
+    @media (min-width:992px){ .wrap{ padding-top:20px; } }
 
-/* 도서 카드 */
-.card {
-  border: none;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-  transition: transform 0.25s, box-shadow 0.25s;
-}
-.card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.15);
-}
-.card-img-top {
-  height: 240px;
-  object-fit: cover;
-}
-.card-body {
-  padding: 16px;
-}
-.card-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #222;
-  margin-bottom: 6px;
-}
-.card-title a {
-  text-decoration: none;
-  color: inherit;
-}
-.card-title a:hover {
-  color: #4A6CF7;
-}
-.card-text {
-  font-size: 0.95rem;
-  color: #666;
-}
-.card-text strong {
-  color: #4A6CF7;
-  font-size: 1.05rem;
-}
+    /* ========= '책 모양' 컨테이너 ========= */
+    .book{
+      position:relative; max-width:1120px; margin:0 auto; background:var(--card);
+      border-radius:22px; border:1px solid #e9eef6; box-shadow:0 18px 44px rgba(23,36,58,.07), 0 -6px 14px rgba(23,36,58,.03) inset;
+      overflow:hidden; margin-top:-6px;  /* 헤더와 살짝 맞물리게 */
+    }
+    /* Spine(책등) */
+    .book::before{
+      content:""; position:absolute; left:0; top:-2px; bottom:-2px; width:14px;
+      background:linear-gradient(180deg,#eef3ff 0%, #e6ecff 100%);
+      border-right:1px solid #dbe3f6;
+    }
+    /* Page edges */
+    .book::after{
+      content:""; position:absolute; right:0; top:4px; bottom:4px; width:10px;
+      background:repeating-linear-gradient(180deg,#f8fafc 0 3px,#eef2f7 3px 6px);
+      opacity:.65;
+    }
 
-/* 페이지네이션 */
-.pagination .page-link {
-  border-radius: 50px;
-  margin: 0 4px;
-  color: #4A6CF7;
-}
-.pagination .active .page-link {
-  background: #4A6CF7;
-  border-color: #4A6CF7;
-  color: #fff;
-}
-</style>
+    /* ========= 헤더(타이틀/도구) ========= */
+    .head{ padding:18px 22px 10px 26px; display:flex; align-items:center; justify-content:space-between; }
+    .head h2{ font-size:1.25rem; margin:0; font-weight:800; letter-spacing:-.02em; }
+    .head .hint{ font-size:.85rem; color:var(--muted); }
 
-<div class="container py-5">
-  <h2>${pageTitle}</h2>
+    /* ========= 검색 바 ========= */
+    .searchbar{ padding:8px 22px 16px 26px; }
+    .searchbar .input-group{ max-width:560px; }
+    .searchbar .form-control{
+      height:44px; border:1px solid #dbe3f1; border-radius:999px 0 0 999px;
+      box-shadow:0 6px 20px rgba(79,70,229,.06) inset;
+    }
+    .searchbar .btn{
+      height:44px; border-radius:0 999px 999px 0; background:var(--brand); border-color:var(--brand);
+      box-shadow:0 8px 18px rgba(79,70,229,.22); color:#fff; font-weight:700; padding:0 22px;
+    }
+    .searchbar .btn:hover{ background:#4338CA; border-color:#4338CA; }
 
-  <!-- 검색 폼 -->
-  <form id="searchForm" class="mb-3">
-    <div class="input-group">
-      <input type="text" id="keyword" name="keyword" value="${keyword}" class="form-control" placeholder="제목으로 책 검색" />
-      <div class="input-group-append">
-        <button type="submit" class="btn">검색</button>
-      </div>
+    /* ========= 추천 캐러셀 ========= */
+    .hero{ padding:0 22px 8px 26px; }
+    .carousel-item img{ height:300px; object-fit:cover; border-radius:16px; }
+    .carousel-caption{
+      background:rgba(15,23,42,.45); backdrop-filter:blur(6px); border-radius:10px; padding:10px 14px;
+    }
+    .carousel-caption h5{ font-weight:700; color:#fff; margin:0; font-size:1rem; }
+
+    /* ========= 그리드(카드) ========= */
+    .grid{ padding:12px 22px 26px 26px; }
+    .book-card{
+      border:1px solid #e9edf3; border-radius:16px; overflow:hidden; background:#fff;
+      box-shadow:0 12px 30px rgba(16,24,40,.06); transition:transform .15s ease, box-shadow .15s ease;
+      height:100%; display:flex; flex-direction:column;
+    }
+    .book-card:hover{ transform:translateY(-2px); box-shadow:0 16px 36px rgba(16,24,40,.10); }
+    .book-card img{ height:220px; object-fit:cover; }
+    .book-card .card-body{ padding:14px; }
+    .book-card .title{ font-weight:700; color:var(--ink); font-size:1rem; margin-bottom:4px; display:block; text-decoration:none; }
+    .book-card .title:hover{ color:var(--brand); text-decoration:none; }
+    .book-card .author{ color:var(--muted); font-size:.9rem; margin:0 0 6px; }
+    .book-card .price{ color:var(--brand); font-weight:800; margin:0; }
+
+    /* ========= 페이지네이션 ========= */
+    .pagi{ padding:0 22px 28px 26px; }
+    .pagination .page-link{ border-radius:999px; margin:0 4px; color:var(--brand); }
+    .pagination .active .page-link{ background:var(--brand); border-color:var(--brand); color:#fff; }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="book">
+
+    <!-- 헤더 -->
+    <div class="head">
+      <h2>${ttl}</h2>
+      <div class="hint">원하는 책을 찾아보세요.</div>
     </div>
-  </form>
 
-  <!-- 추천 도서 Carousel -->
-  <c:if test="${not empty recommendedBooks}">
-    <div id="recommendedCarousel" class="carousel slide mb-5" data-ride="carousel">
-      <div class="carousel-inner">
-        <c:forEach var="book" items="${recommendedBooks}" varStatus="status">
-          <div class="carousel-item ${status.first ? 'active' : ''}">
-            <img src="${book.cover_image}" class="d-block w-100" alt="${book.title}">
-            <div class="carousel-caption">
-              <h5>${book.title}</h5>
+    <!-- 검색 -->
+    <div class="searchbar">
+      <form id="searchForm" class="mb-0">
+        <div class="input-group">
+          <input type="text" id="keyword" name="keyword" value="${keyword}" class="form-control" placeholder="제목으로 책 검색" />
+          <div class="input-group-append">
+            <button type="submit" class="btn">검색</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- 추천 도서 캐러셀 -->
+    <c:if test="${not empty recommendedBooks}">
+      <div class="hero">
+        <div id="recommendedCarousel" class="carousel slide mb-3" data-ride="carousel">
+          <div class="carousel-inner">
+            <c:forEach var="book" items="${recommendedBooks}" varStatus="st">
+              <div class="carousel-item ${st.first ? 'active' : ''}">
+                <img src="${book.cover_image}" class="d-block w-100" alt="${book.title}">
+                <div class="carousel-caption"><h5>${book.title}</h5></div>
+              </div>
+            </c:forEach>
+          </div>
+          <a class="carousel-control-prev" href="#recommendedCarousel" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+          </a>
+          <a class="carousel-control-next" href="#recommendedCarousel" role="button" data-slide="next">
+            <span class="carousel-control-next-icon"></span>
+          </a>
+        </div>
+      </div>
+    </c:if>
+
+    <!-- 도서 그리드 -->
+    <div class="grid">
+      <div id="bookContainer" class="row">
+        <c:forEach var="book" items="${books}">
+          <div class="col-sm-6 col-md-4 col-lg-3 mb-4 d-flex">
+            <div class="book-card w-100">
+              <a href="${ctx}/user/bookDetail/${book.bookId}">
+                <img src="${book.cover_image}" class="w-100" alt="${book.title}">
+              </a>
+              <div class="card-body">
+                <a class="title" href="${ctx}/user/bookDetail/${book.bookId}">${book.title}</a>
+                <p class="author">저자: ${book.author}</p>
+                <p class="price"><fmt:formatNumber value="${book.price}" pattern="#,###"/>원</p>
+              </div>
             </div>
           </div>
         </c:forEach>
+
+        <c:if test="${empty books}">
+          <div class="col-12 text-center text-muted py-5">검색 결과가 없습니다.</div>
+        </c:if>
       </div>
-      <a class="carousel-control-prev" href="#recommendedCarousel" role="button" data-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-      </a>
-      <a class="carousel-control-next" href="#recommendedCarousel" role="button" data-slide="next">
-        <span class="carousel-control-next-icon"></span>
-      </a>
     </div>
-  </c:if>
 
-  <!-- 도서 목록 -->
-  <div id="bookContainer" class="row">
-    <c:forEach var="book" items="${books}">
-      <div class="col-md-3 mb-4 d-flex">
-        <div class="card w-100">
-          <a href="${ctx}/user/bookDetail/${book.bookId}">
-            <img src="${book.cover_image}" class="card-img-top" alt="Cover">
-          </a>
-          <div class="card-body">
-            <h5 class="card-title">
-              <a href="${ctx}/user/bookDetail/${book.bookId}">${book.title}</a>
-            </h5>
-            <p class="card-text">저자: ${book.author}</p>
-            <p class="card-text"><strong>${book.price}원</strong></p>
-          </div>
-        </div>
-      </div>
-    </c:forEach>
+    <!-- 페이지네이션 -->
+    <div class="pagi">
+      <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center mb-0">
+          <c:if test="${startPage > 1}">
+            <li class="page-item"><a class="page-link" href="?page=${startPage-1}&keyword=${keyword}">이전</a></li>
+          </c:if>
+          <c:forEach var="i" begin="${startPage}" end="${endPage}">
+            <li class="page-item ${i == page ? 'active' : ''}">
+              <a class="page-link" href="?page=${i}&keyword=${keyword}">${i}</a>
+            </li>
+          </c:forEach>
+          <c:if test="${endPage < totalPage}">
+            <li class="page-item"><a class="page-link" href="?page=${endPage+1}&keyword=${keyword}">다음</a></li>
+          </c:if>
+        </ul>
+      </nav>
+    </div>
 
-    <c:if test="${empty books}">
-      <div class="col-12 text-center">
-        <p>검색 결과가 없습니다.</p>
-      </div>
-    </c:if>
-  </div>
-</div>
+  </div><!-- /.book -->
+</div><!-- /.wrap -->
 
-<!-- 페이지네이션 -->
-<nav aria-label="Page navigation">
-  <ul class="pagination justify-content-center">
-    <c:if test="${startPage > 1}">
-      <li class="page-item"><a class="page-link" href="?page=${startPage-1}&keyword=${keyword}">이전</a></li>
-    </c:if>
-    <c:forEach var="i" begin="${startPage}" end="${endPage}">
-      <li class="page-item ${i == page ? 'active' : ''}">
-        <a class="page-link" href="?page=${i}&keyword=${keyword}">${i}</a>
-      </li>
-    </c:forEach>
-    <c:if test="${endPage < totalPage}">
-      <li class="page-item"><a class="page-link" href="?page=${endPage+1}&keyword=${keyword}">다음</a></li>
-    </c:if>
-  </ul>
-</nav>
-<!-- jQuery 먼저 -->
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.3/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
-<!-- Ajax 검색 -->
 <script>
-$(document).ready(function(){
-  let debounceTimer;
+  // 디바운스 검색 (JSP EL 충돌 없도록 백틱 사용 안함)
+  $(function(){
+    var debounceTimer;
 
-  // 키워드 입력 시 디바운스로 Ajax 요청
-  $('#keyword').on('keyup', function() {
-    clearTimeout(debounceTimer); // 이전 타이머 제거
-    const keyword = $(this).val();
+    $('#keyword').on('keyup', function(){
+      clearTimeout(debounceTimer);
+      var kw = $(this).val();
 
-    debounceTimer = setTimeout(function() {
-      $.ajax({
-        url: '${ctx}/user/bookList',
-        type: 'get',
-        data: { keyword: keyword, page: 1 }, // 항상 1페이지부터
-        success: function(data) {
-          const newContent = $(data).find('#bookContainer').html();
-          $('#bookContainer').html(newContent);
-        }
-      });
-    }, 300); // 0.3초 입력 멈추면 실행
+      debounceTimer = setTimeout(function(){
+        $.ajax({
+          url: '${ctx}/user/bookList',
+          type: 'get',
+          data: { keyword: kw, page: 1 },
+          success: function(html){
+            var $html = $(html);
+            var newList = $html.find('#bookContainer').html() || '';
+            $('#bookContainer').html(newList);
+          }
+        });
+      }, 300);
+    });
+
+    $('#searchForm').on('submit', function(e){ e.preventDefault(); });
   });
-
-  // 검색 버튼 클릭 시 submit 막기 (Ajax만 동작하도록)
-  $('#searchForm').submit(function(e){
-    e.preventDefault();
-  });
-});
 </script>
+</body>
+</html>

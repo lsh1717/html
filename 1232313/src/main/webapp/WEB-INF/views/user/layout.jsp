@@ -1,5 +1,9 @@
 <%@ include file="../common/header.jsp" %>
-<div id="content">
-   <jsp:include page="/WEB-INF/views/${bodyPage}.jsp" />
-</div>
+
+<main class="py-4">
+  <div class="container">
+    <jsp:include page="/WEB-INF/views/${bodyPage}.jsp" />
+  </div>
+</main>
+
 <%@ include file="../common/footer.jsp" %>

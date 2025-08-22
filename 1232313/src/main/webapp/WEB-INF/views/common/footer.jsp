@@ -1,5 +1,5 @@
-<footer class="footer mt-5 py-3 bg-light">
-  <div class="container">
-    <span class="text-muted">© 2025 BookStore Admin</span>
+<footer class="border-top">
+  <div class="container text-center text-muted py-4">
+    © 2025 BookStore
   </div>
 </footer>

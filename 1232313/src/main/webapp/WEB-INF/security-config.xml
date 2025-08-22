@@ -9,41 +9,41 @@
     <!-- ======================= 보안 규칙 ======================= -->
     <security:http auto-config="true" use-expressions="true">
 
-       <!-- 로그인 없이 접근 가능 -->
-<security:intercept-url pattern="/login/login" access="permitAll" />
-<security:intercept-url pattern="/login/register" access="permitAll" />
-<security:intercept-url pattern="/user/bookList" access="permitAll" />
-<security:intercept-url pattern="/user/bookDetail/**" access="permitAll" />
-<security:intercept-url pattern="/" access="permitAll" />
+        <!-- 로그인 없이 접근 가능 -->
+        <security:intercept-url pattern="/login/login" access="permitAll"/>
+        <security:intercept-url pattern="/login/register" access="permitAll"/>
+        <security:intercept-url pattern="/user/bookList" access="permitAll"/>
+        <security:intercept-url pattern="/user/bookDetail/**" access="permitAll"/>
+        <security:intercept-url pattern="/" access="permitAll"/>
 
-<!-- 🛒 장바구니 / 주문 : 로그인 안 해도 접근 가능 -->
-<security:intercept-url pattern="/cart/**" access="permitAll" />
-<security:intercept-url pattern="/order/**" access="permitAll" />
+        <!-- 🛒 장바구니 / 주문 : 로그인 안 해도 접근 가능 -->
+        <security:intercept-url pattern="/cart/**" access="permitAll"/>
+        <security:intercept-url pattern="/order/**" access="permitAll"/>
 
-<!-- 관리자 전용 -->
-<security:intercept-url pattern="/admin/**" access="hasRole('ADMIN')" />
+        <!-- 관리자 전용 -->
+        <security:intercept-url pattern="/admin/**" access="hasRole('ADMIN')"/>
 
-<!-- 일반 사용자 -->
-<security:intercept-url pattern="/user/**" access="hasAnyRole('CUSTOMER','ADMIN')" />
+        <!-- 일반 사용자 -->
+        <security:intercept-url pattern="/user/**" access="hasAnyRole('CUSTOMER','ADMIN')"/>
 
-<!-- 마지막 catch-all -->
-<security:intercept-url pattern="/**" access="isAuthenticated()" />
+        <!-- 마지막 catch-all -->
+        <security:intercept-url pattern="/**" access="isAuthenticated()"/>
 
         <!-- 로그인 설정 -->
         <security:form-login
-            login-page="/login/login"
-            authentication-failure-url="/login/login?error=true"
-            username-parameter="username"
-            password-parameter="password"
-            authentication-success-handler-ref="loginSuccess" />
+                login-page="/login/login"
+                authentication-failure-url="/login/login?error=true"
+                username-parameter="username"
+                password-parameter="password"
+                authentication-success-handler-ref="loginSuccess"/>
 
         <!-- 접근 거부 핸들러 -->
-        <security:access-denied-handler ref="accessDenied" />
+        <security:access-denied-handler ref="accessDenied"/>
 
         <!-- 로그아웃 -->
         <security:logout logout-url="/logout"
                          logout-success-url="/login/login?logout=true"
-                         delete-cookies="JSESSIONID,cart" />
+                         delete-cookies="JSESSIONID,cart"/>
     </security:http>
 
     <!-- ======================= Authentication Manager ======================= -->
@@ -57,7 +57,7 @@
     <!-- 비밀번호 암호화기 -->
     <bean id="bpe" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
 
-    <!-- 권한 매퍼 (ROLE_ 제거, 대문자 변환) -->
+    <!-- (선택) 권한 매퍼: 사용하지 않아도 됨. 사용한다면 prefix 공란 유지 -->
     <bean id="authorityMapper"
           class="org.springframework.security.core.authority.mapping.SimpleAuthorityMapper">
         <property name="convertToUpperCase" value="true"/>

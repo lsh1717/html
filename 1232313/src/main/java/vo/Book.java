@@ -1,21 +1,30 @@
 package vo;
 
 import java.math.BigDecimal;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * µµ¼­ ¿£ÅÍÆ¼ VO
+ * - cover_image: DB/±âÁ¸ JSP¿¡¼­ »ç¿ëÇÏ´Â ½º³×ÀÌÅ© ÄÉÀÌ½º ÇÊµå
+ * - getCoverImage()/setCoverImage(): Ä«¸á ÄÉÀÌ½º Á¢±Ùµµ Çã¿ë(½Å±Ô JSP/¸ÅÆÛ È£È¯)
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book {
-    private Long bookId;               // PK
-    private String title;              // ë„ì„œ ì œëª©
-    private String author;             // ì €ìëª…
-    private String description;        // ìƒì„¸ ì„¤ëª…(ê¸¸ì´ ë¬´ì œí•œ)
-    private BigDecimal price;          // íŒë§¤ê°€(0 ì´ìƒ)
-    private Long stock;                // ì¬ê³  ìˆ˜ëŸ‰(ìŒìˆ˜ ë¶ˆê°€)
-    private String cover_image;         // í‘œì§€ ì´ë¯¸ì§€ URL
+    private Long bookId;          // PK
+    private String title;         // µµ¼­ Á¦¸ñ
+    private String author;        // ÀúÀÚ¸í
+    private String description;   // »ó¼¼ ¼³¸í
+    private BigDecimal price;     // ÆÇ¸Å°¡
+    private Long stock;           // Àç°í ¼ö·®
 
+    // ÇÁ·ÎÁ§Æ® ¸Ş¸ğ¿¡ ¸ÂÃá ±âº» ÇÊµå¸í(½º³×ÀÌÅ©)
+    private String cover_image;   // Ç¥Áö ÀÌ¹ÌÁö URL
+
+    // === È£È¯ ºê¸´Áö(Ä«¸á ÄÉÀÌ½º Á¢±Ù Áö¿ø) ===
+    public String getCoverImage() { return cover_image; }
+    public void setCoverImage(String v) { this.cover_image = v; }
 }
