@@ -8,28 +8,64 @@
 			http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
 			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
-	<!-- DB 설정 -->
-	<context:property-placeholder location="classpath:db.properties" />
+	<!-- ===================================================================
+	     DB 프로퍼티 로딩
+	     =================================================================== -->
+	<context:property-placeholder location="classpath:db.properties"/>
 
-	<!-- MyBatis Mapper 자동 스캔 -->
-	<mybatis-spring:scan base-package="login,repository,controller,service,vo" />
+	<!-- ===================================================================
+	     컴포넌트 스캔 (Controller / Service 등)
+	     ※ MyBatis Mapper 스캔과 분리하세요.
+	     =================================================================== -->
+	<context:component-scan base-package="controller,service"/>
 
-	<!-- SqlSessionFactory 설정 추가 -->
+	<!-- ===================================================================
+	     MyBatis Mapper 스캔 (@Mapper 인터페이스만)
+	     ※ controller/service/vo 패키지는 절대 넣지 마세요.
+	     =================================================================== -->
+	<mybatis-spring:scan base-package="repository,login"/>
+
+	<!-- ===================================================================
+	     DataSource
+	     =================================================================== -->
+	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
+		<property name="driverClassName" value="${db.driver}"/>
+		<property name="url"             value="${db.url}"/>
+		<property name="username"        value="${db.username}"/>
+		<property name="password"        value="${db.password}"/>
+	</bean>
+
+	<!-- ===================================================================
+	     SqlSessionFactory
+	       - mapUnderscoreToCamelCase: 스네이크 -> 카멜
+	       - jdbcTypeForNull=VARCHAR : Oracle ORA-17004 회피(널 바인딩)
+	       - typeAliasesPackage=vo   : VO 간단 별칭
+	       - mapperLocations         : XML 매퍼(예: ReviewMapper.xml) 로딩
+	     =================================================================== -->
 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
-		<property name="dataSource" ref="dataSource" />
+		<property name="dataSource" ref="dataSource"/>
+		<!-- VO 별칭 -->
+		<property name="typeAliasesPackage" value="vo"/>
+		<!-- XML 매퍼 위치(필요 경로로 조정 가능) -->
+		<property name="mapperLocations" value="classpath*:mapper/**/*.xml"/>
+		<!-- MyBatis 기본 설정 -->
 		<property name="configuration">
 			<bean class="org.apache.ibatis.session.Configuration">
+				<!-- DB 컬럼: snake_case -> VO: camelCase -->
 				<property name="mapUnderscoreToCamelCase" value="true"/>
+				<!-- ★ Oracle에서 NULL 파라미터 바인딩을 VARCHAR로 처리 -->
+				<property name="jdbcTypeForNull" value="VARCHAR"/>
+				<!-- (옵션) 널도 setter 호출해야 하면 아래 활성화
+				<property name="callSettersOnNulls" value="true"/>
+				-->
 			</bean>
 		</property>
 	</bean>
 
-	<!-- 데이터소스 정의 필요 (db.properties에서 로드) -->
-	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
-		<property name="driverClassName" value="${db.driver}" />
-		<property name="url" value="${db.url}" />
-		<property name="username" value="${db.username}" />
-		<property name="password" value="${db.password}" />
+	<!-- (선택) SqlSessionTemplate 직접 사용할 경우
+	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory"/>
 	</bean>
+	-->
 
 </beans>

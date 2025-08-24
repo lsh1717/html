@@ -1,6 +1,8 @@
 package service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,7 +16,7 @@ import vo.Orders;
  * 주문 관련 비즈니스 로직 서비스
  * - 조회(회원별 주문/아이템)
  * - 생성(주문 + 아이템 배치)
- * - 대시보드용 통계(오늘 주문 수/매출, 최근 주문/월매출/상태 분포)
+ * - 대시보드용 통계(오늘 주문 수/매출, 최근 주문/일/월매출, 상태 분포, 상태별 건수)
  */
 @Service
 public class OrderService {
@@ -22,30 +24,24 @@ public class OrderService {
     @Autowired
     private OrderMapper orderMapper;
 
-    /**
-     * 회원 PK 기준 주문(헤더+아이템) 조회
-     */
+    /** 회원 PK 기준 주문(헤더+아이템) 조회 */
     public List<Orders> getOrdersByMemberId(Long memberId) {
         return orderMapper.findOrdersWithItems(memberId);
     }
 
-    /**
-     * 주문 생성 트랜잭션
-     * 1) 주문 헤더 INSERT
-     * 2) 각 아이템 INSERT(생성된 orderId 매핑)
-     */
+    /** 주문 생성 트랜잭션 */
     @Transactional
     public void createOrder(Orders order, List<OrderItem> orderItems) {
-        orderMapper.insertOrder(order); // orderId 생성됨(SelectKey)
-        for (OrderItem item : orderItems) {
-            item.setOrderId(order.getOrderId());
-            orderMapper.insertOrderItem(item);
+        orderMapper.insertOrder(order); // SelectKey 로 orderId 세팅됨
+        if (orderItems != null) {
+            for (OrderItem item : orderItems) {
+                item.setOrderId(order.getOrderId());
+                orderMapper.insertOrderItem(item);
+            }
         }
     }
 
-    /**
-     * 특정 주문의 아이템 목록 조회(제목/표지 포함)
-     */
+    /** 특정 주문의 아이템 목록 조회(제목/표지 포함) */
     public List<OrderItem> getOrderItemsByOrderId(Long orderId) {
         return orderMapper.findOrderItemsByOrderId(orderId);
     }
@@ -57,16 +53,13 @@ public class OrderService {
         return orderMapper.countTodayOrders();
     }
 
-    /**
-     * 오늘 매출(취소 제외)
-     * - Mapper는 NULL 가능성이 있으므로 0으로 안전 변환
-     */
+    /** 오늘 매출(취소 제외) */
     public int todayRevenue() {
         Integer v = orderMapper.sumTodayRevenue();
         return v == null ? 0 : v;
     }
 
-    /** (동일 기능, 메서드명만 다른 버전 — 호환용) */
+    /** 동일 기능(호환용 메서드명) */
     public int sumTodayRevenue() {
         Integer v = orderMapper.sumTodayRevenue();
         return v == null ? 0 : v;
@@ -83,15 +76,32 @@ public class OrderService {
     }
 
     /** 최근 N개월 월별 매출(취소 제외) */
-    public List<java.util.Map<String, Object>> monthlyRevenue(int months) {
-        return orderMapper.monthlyRevenue(months);
+    public List<Map<String, Object>> monthlyRevenue(int months) {
+        List<Map<String, Object>> list = orderMapper.monthlyRevenue(months);
+        return list == null ? Collections.emptyList() : list;
+    }
+
+    /** 주문 상태 분포(PAID/SHIPPING/DELIVERED/CANCELLED) */
+    public List<Map<String, Object>> statusCounts() {
+        List<Map<String, Object>> list = orderMapper.statusCounts();
+        return list == null ? Collections.emptyList() : list;
+    }
+
+    // ===== 새로 추가: 대시보드 정확도 향상 =====
+
+    /** 상태별 주문 건수 (출고 대기=PAID, 배송 중=SHIPPING) */
+    public int countByStatus(String status) {
+        Integer v = orderMapper.countByStatus(status);
+        return v == null ? 0 : v;
     }
 
     /**
-     * 주문 상태 분포
-     * - 상태는 4단계만 사용: PAID(결제 완료), SHIPPING(배송중), DELIVERED(배송완료), CANCELLED(취소)
+     * 최근 N일 일자별 매출(취소 제외)
+     * - Mapper 반환 예시: [{d: '2025-08-10', amount: 120000}, ...]
+     *   또는 d/date(일자) + amount/sum/total 등의 키를 포함.
      */
-    public List<java.util.Map<String, Object>> statusCounts() {
-        return orderMapper.statusCounts();
+    public List<Map<String, Object>> dailyRevenue(int days) {
+        List<Map<String, Object>> list = orderMapper.dailyRevenue(days);
+        return list == null ? Collections.emptyList() : list;
     }
 }

@@ -1,64 +1,55 @@
 package service;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import repository.AdminOrderMapper;
-import repository.OrderMapper;
 import vo.OrderItem;
 import vo.Orders;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class AdminOrderService {
 
-    private final AdminOrderMapper mapper;   // ∞¸∏Æ¿⁄ ¿¸øÎ ∏Ò∑œ/« ≈Õ/ªË¡¶
-    private final OrderMapper orderMapper;   // ±‚µÓ∑œµ» findOrderItemsByOrderId ¿ÁªÁøÎ
+    private final AdminOrderMapper mapper;
 
-    public int count(String status, String keyword){
-        return mapper.count(status, keyword);
+    public Map<String,Object> list(int page, int size, String status, String keyword){
+        int total = mapper.count(status, keyword);
+        int totalPage = (int)Math.ceil(total / (double)size);
+        int offset = (page-1) * size;
+        List<Orders> rows = mapper.list(status, keyword, offset, size);
+
+        Map<String,Object> resp = new HashMap<>();
+        resp.put("page", page);
+        resp.put("size", size);
+        resp.put("totalCount", total);
+        resp.put("totalPage", totalPage);
+        resp.put("items", rows);
+        return resp;
     }
 
-    public List<Orders> findPaged(int page, int size, String status, String keyword){
-        int p = Math.max(1, page);
-        int offset = (p - 1) * size;
-        List<Orders> list = mapper.findPaged(offset, size, status, keyword);
-        // ∞£¥‹ ø‰æ‡(√π æ∆¿Ã≈€ ¡¶∏Ò + ø‹ n∞≥)
-        for (Orders o : list) {
-            String summary = mapper.summary(o.getOrderId());
-            o.setStatus(o.getStatus()); // ¡˜∑ƒ»≠ ∫∏¿Â
-            // summary∏¶ Orders VOø° ¿”Ω√∑Œ ≥÷∞Ì ΩÕ¥Ÿ∏È lombok @Data ¿ÃøÎ«ÿ setSummary √ﬂ∞°(æ∆∑° VO ºΩº« ¬¸∞Ì)
-            try { Orders.class.getDeclaredField("summary"); } catch (NoSuchFieldException ignore) {}
-        }
-        return list;
+    public Map<String,Object> detail(Long orderId){
+        Orders hdr = mapper.findHeader(orderId);
+        List<OrderItem> items = mapper.findItems(orderId);
+        Map<String,Object> resp = new HashMap<>();
+        resp.put("orderId", hdr.getOrderId());
+        resp.put("userId", hdr.getUserId());
+        resp.put("orderDate", hdr.getOrderDate());
+        resp.put("totalAmount", hdr.getTotalAmount());
+        resp.put("status", hdr.getStatus());
+        resp.put("items", items);
+        return resp;
     }
 
-    public Orders findOneWithItems(Long orderId){
-        Orders o = mapper.findOne(orderId);
-        if (o == null) return null;
-        List<OrderItem> items = orderMapper.findOrderItemsByOrderId(orderId);
-        o.setItems(items);
-        return o;
+    public boolean updateStatus(Long orderId, String status){
+        return mapper.updateStatus(orderId, status) > 0;
     }
 
-    @Transactional
-    public void updateStatus(Long orderId, String status){
-        // «„øÎ∞™ ∞À¡ı
-        if (!"PAID".equals(status) && !"SHIPPING".equals(status) && !"DELIVERED".equals(status) && !"CANCELLED".equals(status)) {
-            throw new IllegalArgumentException("invalid status");
-        }
-        mapper.updateStatus(orderId, status);
-    }
-
-    @Transactional
-    public boolean deleteIfPaid(Long orderId){
-        String cur = mapper.getStatus(orderId);
-        if (!"PAID".equals(cur)) return false;
+    public int deleteIfPaid(Long orderId){
         mapper.deleteItems(orderId);
-        mapper.deleteOrderIfPaid(orderId);
-        return true;
+        return mapper.deleteOrderIfPaid(orderId); // 1Ïù¥Î©¥ ÏÇ≠Ï†ú ÏÑ±Í≥µ, 0Ïù¥Î©¥ (PAIDÍ∞Ä ÏïÑÎãàÎùº) Ïã§Ìå®
     }
 }

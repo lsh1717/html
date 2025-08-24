@@ -1,95 +1,55 @@
 package repository;
 
-import java.util.List;
 import org.apache.ibatis.annotations.*;
-import org.apache.ibatis.type.JdbcType;
+import java.util.List;
 import vo.Member;
 
 @Mapper
 public interface AdminUserMapper {
 
-  /* √— ∞≥ºˆ */
-  @Select({
-    "<script>",
-    "SELECT COUNT(*)",
-    "FROM USERS u",
-    "<where>",
-    "  <if test='keyword != null and keyword != \"\"'>",
-    "    ( u.LOGIN_ID LIKE '%'||#{keyword}||'%'",
-    "      OR u.NAME   LIKE '%'||#{keyword}||'%'",
-    "      OR u.EMAIL  LIKE '%'||#{keyword}||'%' )",
-    "  </if>",
-    "  <if test='role != null and role != \"\"'>",
-    "    AND u.ROLE = #{role}",
-    "  </if>",
-    "  <if test='blocked != null and blocked != \"\"'>",
-    "    AND u.BLOCKED = #{blocked}",
-    "  </if>",
-    "</where>",
-    "</script>"
-  })
-  int count(@Param("keyword") String keyword,
-            @Param("role")    String role,
-            @Param("blocked") String blocked);
+    /* Ï¥ù Í∞úÏàò */
+    @Select(
+      "SELECT COUNT(*) FROM users u " +
+      "WHERE (#{keyword} IS NULL OR #{keyword}='' " +
+      "       OR u.login_id LIKE '%'||#{keyword}||'%' " +
+      "       OR u.name     LIKE '%'||#{keyword}||'%' " +
+      "       OR u.email    LIKE '%'||#{keyword}||'%')" +
+      "  AND (#{role} IS NULL OR #{role}='' OR u.role = #{role}) " +
+      "  AND (#{blocked} IS NULL OR #{blocked}='' OR u.blocked = #{blocked})"
+    )
+    int count(@Param("keyword") String keyword,
+              @Param("role")    String role,
+              @Param("blocked") String blocked);
 
-  /* ∏Ò∑œ(∆‰¿Ã¬°) */
-  @Select({
-    "<script>",
-    "SELECT * FROM (",
-    "  SELECT t.*, ROWNUM rn FROM (",
-    "    SELECT",
-    "      u.USER_ID  AS userId,",
-    "      u.LOGIN_ID AS loginId,",
-    "      u.NAME     AS name,",
-    "      u.EMAIL    AS email,",
-    "      u.HP       AS hp,",
-    "      u.ROLE     AS role,",
-    "      u.BLOCKED  AS blocked",
-    "    FROM USERS u",
-    "    <where>",
-    "      <if test='keyword != null and keyword != \"\"'>",
-    "        ( u.LOGIN_ID LIKE '%'||#{keyword}||'%'",
-    "          OR u.NAME   LIKE '%'||#{keyword}||'%'",
-    "          OR u.EMAIL  LIKE '%'||#{keyword}||'%' )",
-    "      </if>",
-    "      <if test='role != null and role != \"\"'>",
-    "        AND u.ROLE = #{role}",
-    "      </if>",
-    "      <if test='blocked != null and blocked != \"\"'>",
-    "        AND u.BLOCKED = #{blocked}",
-    "      </if>",
-    "    </where>",
-    "    ORDER BY u.USER_ID DESC",
-    "  ) t",
-    "  WHERE ROWNUM &lt;= #{offset} + #{size}",
-    ")",
-    "WHERE rn &gt; #{offset}",
-    "</script>"
-  })
-  @Results(id="UserMap", value = {
-    @Result(column="userId",  property="userId",  id=true, jdbcType=JdbcType.BIGINT),
-    @Result(column="loginId", property="loginId"),
-    @Result(column="name",    property="name"),
-    @Result(column="email",   property="email"),
-    @Result(column="hp",      property="hp"),
-    @Result(column="role",    property="role"),
-    @Result(column="blocked", property="blocked")
-  })
-  List<Member> list(@Param("offset") int offset,
-                    @Param("size")   int size,
-                    @Param("keyword") String keyword,
-                    @Param("role")    String role,
-                    @Param("blocked") String blocked);
+    /* Î™©Î°ù (ÌéòÏù¥ÏßÄÎÑ§Ïù¥ÏÖò) */
+    @Select(
+      "SELECT * FROM (" +
+      "  SELECT u.user_id AS userId, u.login_id AS loginId, u.name, u.role, u.blocked, " +
+      "         ROW_NUMBER() OVER(ORDER BY u.user_id DESC) rn " +
+      "  FROM users u " +
+      "  WHERE (#{keyword} IS NULL OR #{keyword}='' " +
+      "         OR u.login_id LIKE '%'||#{keyword}||'%' " +
+      "         OR u.name     LIKE '%'||#{keyword}||'%' " +
+      "         OR u.email    LIKE '%'||#{keyword}||'%')" +
+      "    AND (#{role} IS NULL OR #{role}='' OR u.role = #{role}) " +
+      "    AND (#{blocked} IS NULL OR #{blocked}='' OR u.blocked = #{blocked})" +
+      ") WHERE rn BETWEEN (#{offset}+1) AND (#{offset}+#{size})"
+    )
+    List<Member> list(@Param("keyword") String keyword,
+                      @Param("role")    String role,
+                      @Param("blocked") String blocked,
+                      @Param("offset")  int offset,
+                      @Param("size")    int size);
 
-  /* ±««— ∫Ø∞Ê */
-  @Update("UPDATE USERS SET ROLE = #{role} WHERE USER_ID = #{userId}")
-  int updateRole(@Param("userId") Long userId, @Param("role") String role);
+    /* Í∂åÌïú Î≥ÄÍ≤Ω */
+    @Update("UPDATE users SET role = #{role} WHERE user_id = #{userId}")
+    int updateRole(@Param("userId") Integer userId, @Param("role") String role);
 
-  /* ¬˜¥‹/«ÿ¡¶ */
-  @Update("UPDATE USERS SET BLOCKED = #{blocked} WHERE USER_ID = #{userId}")
-  int updateBlocked(@Param("userId") Long userId, @Param("blocked") String blocked); // 'Y' or 'N'
+    /* Ï∞®Îã®/Ìï¥Ï†ú (Y/N) */
+    @Update("UPDATE users SET blocked = #{blocked} WHERE user_id = #{userId}")
+    int updateBlocked(@Param("userId") Integer userId, @Param("blocked") String blocked);
 
-  /* ªË¡¶ */
-  @Delete("DELETE FROM USERS WHERE USER_ID = #{userId}")
-  int delete(@Param("userId") Long userId);
+    /* ÏÇ≠Ï†ú */
+    @Delete("DELETE FROM users WHERE user_id = #{userId}")
+    int delete(@Param("userId") Integer userId);
 }

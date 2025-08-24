@@ -9,11 +9,13 @@
   <meta charset="UTF-8" />
   <title>BookShop Admin</title>
 
+  <!-- CSRF (Spring Security가 모델에 _csrf 넣어줄 때 메타로 전달) -->
   <c:if test="${not empty _csrf}">
     <meta name="_csrf" content="${_csrf.token}"/>
     <meta name="_csrf_header" content="${_csrf.headerName}"/>
   </c:if>
 
+  <!-- 외부 리소스 -->
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
@@ -48,6 +50,15 @@
     .brand{font-weight:700}
     .brand i{color:var(--primary)}
 
+    /* 중앙 정렬 & 좌우 여백 */
+    .container-xl{
+      max-width: 1320px;
+      margin: 0 auto;
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+    .navbar .container-xl{ margin: 0 auto; }
+
     /* tabs */
     .nav-pills .nav-link{
       color:var(--muted);
@@ -80,18 +91,26 @@
     .btn-outline-secondary:hover{background:rgba(96,165,250,.15); color:var(--text)}
 
     /* misc */
-    .container-xl{max-width:1320px}
     .mini{font-size:.9rem; color:var(--muted)}
     .cover{width:42px;height:56px;object-fit:cover;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.25)}
     footer{color:var(--muted)}
     .badge-danger{background:#ef4444}
+    .text-truncate-2{
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+      max-width: 520px;
+    }
 
-    /* status chips for orders & users */
+    /* chips */
     .chip{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700;font-size:.8rem;border:1px solid transparent;line-height:1}
     .chip-paid{background:#111827;color:#e5e7eb;border-color:#1f2937}
     .chip-ship{background:#172554;color:#60a5fa;border-color:#1d3a7a}
     .chip-done{background:#052e1b;color:#34d399;border-color:#115e3b}
     .chip-cancel{background:#3b0a0a;color:#fca5a5;border-color:#7f1d1d}
+
+    /* 리뷰 상태 표시용 */
+    .chip-vis{background:#0a1f12;color:#34d399;border-color:#115e3b}
+    .chip-hid{background:#2f0b0b;color:#fca5a5;border-color:#7f1d1d}
+
     .btn-mini{padding:.25rem .5rem;font-size:.8rem}
   </style>
 </head>
@@ -100,22 +119,17 @@
 
 <!-- Topbar -->
 <nav class="navbar navbar-expand navbar-dark">
-  <div class="container-xl d-flex align-items-center justify-content-between">
-    <div class="brand">
+  <div class="container-xl d-flex align-items-center w-100">
+    <!-- 좌측: 브랜드 (왼쪽 정렬) -->
+    <a class="navbar-brand brand mr-auto" href="${ctx}/admin/dashboard">
       <i class="bi bi-bar-chart-fill mr-2"></i>BookShop Admin
-    </div>
+    </a>
 
-    <div class="d-flex align-items-center">
-      <a class="btn btn-soft btn-sm mr-2" href="${ctx}/admin/bookManage">
-        <i class="bi bi-plus-lg mr-1"></i>도서 추가
-      </a>
-
-      <!-- theme toggle -->
+    <!-- 우측: 다크/로그아웃 (오른쪽 정렬) -->
+    <div class="d-flex align-items-center ml-auto">
       <button id="themeBtn" type="button" class="btn btn-soft btn-sm mr-2">
         <i class="bi bi-moon-stars mr-1"></i><span>다크</span>
       </button>
-
-      <!-- POST /logout -->
       <form action="${ctx}/logout" method="post" class="m-0">
         <c:if test="${not empty _csrf}">
           <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
@@ -138,7 +152,7 @@
 
   <div class="tab-content">
 
-    <!-- DASHBOARD -->
+    <!-- ===== DASHBOARD ===== -->
     <div class="tab-pane fade show active" id="tab-dashboard">
       <!-- KPIs -->
       <div class="row">
@@ -226,16 +240,10 @@
 
       </div>
 
-      <div class="card p-3 mt-2">
-        <div class="d-flex flex-wrap">
-          <a class="btn btn-soft mr-2 mb-2" href="${ctx}/admin/bookManage"><i class="bi bi-journal-plus mr-1"></i>도서 등록</a>
-          <a class="btn btn-soft mr-2 mb-2" href="${ctx}/admin/orders"><i class="bi bi-receipt mr-1"></i>주문 목록</a>
-          <a class="btn btn-soft mr-2 mb-2" href="${ctx}/admin/users"><i class="bi bi-people mr-1"></i>회원 관리</a>
-        </div>
-      </div>
+      <!-- 🔥 하단 단축 버튼 카드는 제거됨 -->
     </div>
 
-    <!-- BOOKS TAB -->
+    <!-- ===== BOOKS TAB ===== -->
     <div class="tab-pane fade" id="tab-books">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="m-0">도서 관리</h5>
@@ -324,7 +332,7 @@
       </div>
     </div>
 
-    <!-- ORDERS TAB -->
+    <!-- ===== ORDERS TAB ===== -->
     <div class="tab-pane fade" id="tab-orders">
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
         <h5 class="m-0">주문 관리</h5>
@@ -385,7 +393,7 @@
       </script>
     </div>
 
-    <!-- USERS TAB -->
+    <!-- ===== USERS TAB ===== -->
     <div class="tab-pane fade" id="tab-users">
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
         <h5 class="m-0">유저 관리</h5>
@@ -430,14 +438,85 @@
       </nav>
     </div>
 
-    <!-- REVIEW TAB (placeholder) -->
+    <!-- ===== REVIEWS TAB (신규 구현) ===== -->
     <div class="tab-pane fade" id="tab-reviews">
-      <div class="card p-4 text-center mini">리뷰 관리는 <a href="${ctx}/admin/reviews">여기</a>에서 진행하세요.</div>
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <h5 class="m-0">리뷰 관리</h5>
+        <form id="rvSearchForm" class="form-inline">
+          <!-- 평점 필터 -->
+          <select id="rvRating" class="form-control form-control-sm mr-2">
+            <option value="">전체 평점</option>
+            <option value="5">★5</option>
+            <option value="4">★4</option>
+            <option value="3">★3</option>
+            <option value="2">★2</option>
+            <option value="1">★1</option>
+          </select>
+          <!-- 상태 필터 -->
+          <select id="rvStatus" class="form-control form-control-sm mr-2">
+            <option value="">전체 상태</option>
+            <option value="VISIBLE">노출</option>
+            <option value="HIDDEN">숨김</option>
+          </select>
+          <!-- 도서 ID -->
+          <input type="text" id="rvBookId" class="form-control form-control-sm mr-2" placeholder="도서ID">
+          <!-- 키워드: 작성자/내용/도서제목 -->
+          <input type="text" id="rvKeyword" class="form-control form-control-sm mr-2" placeholder="작성자/내용/도서 검색">
+          <button class="btn btn-outline-primary btn-sm">검색</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-dark align-middle mb-0" id="reviewsTable">
+            <thead>
+              <tr>
+                <th style="width:90px">리뷰ID</th>
+                <th style="width:220px">도서</th>
+                <th style="width:160px">작성자</th>
+                <th style="width:100px" class="text-center">평점</th>
+                <th>내용</th>
+                <th style="width:140px">작성일</th>
+                <th style="width:110px" class="text-center">상태</th>
+                <th style="width:210px" class="text-right">관리</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <nav class="mt-3">
+        <ul class="pagination pagination-sm justify-content-center" id="reviewsPager"></ul>
+      </nav>
     </div>
 
   </div>
 
   <footer class="text-center mt-4">&copy; 2025 BookShop. All rights reserved.</footer>
+</div>
+
+<!-- 공용 모달: 리뷰 내용 상세 -->
+<div class="modal fade" id="rvModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" style="background:var(--card); border:1px solid var(--border);">
+      <div class="modal-header">
+        <h6 class="modal-title">리뷰 상세</h6>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2"><b>도서</b>: <span id="rvmBook"></span></div>
+        <div class="mb-2"><b>작성자</b>: <span id="rvmUser"></span></div>
+        <div class="mb-2"><b>평점</b>: <span id="rvmRating"></span></div>
+        <div class="mb-2"><b>작성일</b>: <span id="rvmDate"></span></div>
+        <hr/>
+        <div id="rvmContent" class="white-space-prewrap"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-dismiss="modal">닫기</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Scripts -->
@@ -474,6 +553,16 @@
   function textColor(){ return cssVar('--muted'); }
   function primary(){ return cssVar('--primary'); }
 
+//상태 칩과 동일한 팔레트
+  const STATUS_PALETTE = {
+  PAID:      { bg: 'rgba(23,37,84,0.6)',    border: 'rgba(29,58,122,0.9)' }, // 밝은 파랑
+  SHIPPING:  { bg: 'rgba(96,165,250,0.6)',  border: 'rgba(96,165,250,0.9)'  }, // 네이비
+  SHIPPED:   { bg: 'rgba(23,37,84,0.6)',    border: 'rgba(29,58,122,0.9)'   }, // 동의어
+  DELIVERED: { bg: 'rgba(5,46,27,0.6)',     border: 'rgba(17,94,59,0.9)'    }, // 진녹
+  CANCELLED: { bg: 'rgba(59,10,10,0.6)',    border: 'rgba(127,29,29,0.9)'   }, // 와인
+  PENDING:   { bg: 'rgba(100,116,139,0.6)', border: 'rgba(71,85,105,0.9)'   }  // 회색(예비)
+};
+  
   let salesChart, catChart, statChart;
   function buildCharts(){
     Chart.defaults.color = textColor();
@@ -496,16 +585,34 @@
       options:{plugins:{legend:{position:'bottom', labels:{color:textColor()}}}}
     });
 
+ // 상태 라벨 순서대로 색 매핑
+    const statBg     = statusLbl.map(s => (STATUS_PALETTE[s]?.bg)     || primary());
+    const statBorder = statusLbl.map(s => (STATUS_PALETTE[s]?.border) || primary());
+
     statChart = new Chart(document.getElementById('statusChart'), {
-      type:'bar',
-      data:{labels:statusLbl, datasets:[{data:statusDat}]},
-      options:{plugins:{legend:{display:false}}, scales:{x:{grid:{color:gridColor()}}, y:{beginAtZero:true, grid:{color:gridColor()}, ticks:{stepSize:1}}}}
+      type: 'bar',
+      data: {
+        labels: statusLbl,
+        datasets: [{
+          data: statusDat,
+          backgroundColor: statBg,
+          borderColor: statBorder,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        plugins: { legend: { display:false } },
+        scales: {
+          x: { grid:{ color: gridColor() } },
+          y: { beginAtZero:true, grid:{ color: gridColor() }, ticks:{ stepSize:1 } }
+        }
+      }
     });
   }
   function recolorCharts(){ if(salesChart){ salesChart.destroy(); catChart.destroy(); statChart.destroy(); } buildCharts(); }
   buildCharts();
 
-  /* ===== Common utils ===== */
+  /* ===== 공통 유틸 ===== */
   function fmtWon(n){ if(n==null) return '-'; try{return Number(n).toLocaleString('ko-KR')+'원';}catch(e){return n;} }
   function fmtDate(s){
     if(!s) return '';
@@ -515,234 +622,105 @@
     return d.getFullYear() + '.' + z(d.getMonth()+1) + '.' + z(d.getDate());
   }
   function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>\"']/g,function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
+  function stars(n){ n = Number(n)||0; if(n<0) n=0; if(n>5) n=5; return '★'.repeat(n)+'☆'.repeat(5-n); }
 
   /* ===== Orders (AJAX) ===== */
-  var ORD = {
-    api: '${ctx}/admin/api/orders',
-    page: 1, size: 10, status: '', keyword: '',
-    csrf: (function(){
-      var t=document.querySelector('meta[name="_csrf"]');
-      var h=document.querySelector('meta[name="_csrf_header"]');
-      return {token:t?t.content:null, header:h?h.content:null};
-    })()
-  };
-  function ordHeaders(){ var h={'Content-Type':'application/json'}; if(ORD.csrf.token&&ORD.csrf.header) h[ORD.csrf.header]=ORD.csrf.token; return h; }
-  function statusLabel(s){ return s==='PAID'?'결제 완료':s==='SHIPPING'?'배송중':s==='DELIVERED'?'배송완료':s==='CANCELLED'?'취소':s; }
-
-  function loadOrders(page){
-    if(!page) page=1;
-    ORD.page=page;
-    $.get(ORD.api, {page:ORD.page, size:ORD.size, status:ORD.status, keyword:ORD.keyword}, function(res){
-      renderOrders(res.items||[]);
-      renderOPager(res.page||1, res.totalPage||1);
-    }).fail(function(xhr){ alert('주문 목록을 불러오지 못했습니다.'); console.error(xhr.responseText); });
-  }
-
+  var ORD={api:'${ctx}/admin/api/orders',page:1,size:10,status:'',keyword:'',csrf:(function(){var t=document.querySelector('meta[name="_csrf"]');var h=document.querySelector('meta[name="_csrf_header"]');return{token:t?t.content:null,header:h?h.content:null};})()};
+  function ordHeaders(){var h={'Content-Type':'application/json'};if(ORD.csrf.token&&ORD.csrf.header)h[ORD.csrf.header]=ORD.csrf.token;return h;}
+  function statusLabel(s){return s==='PAID'?'결제 완료':s==='SHIPPING'?'배송중':s==='DELIVERED'?'배송완료':s==='CANCELLED'?'취소':s;}
+  function loadOrders(p){if(!p)p=1;ORD.page=p;$.get(ORD.api,{page:ORD.page,size:ORD.size,status:ORD.status,keyword:ORD.keyword},function(res){renderOrders(res.items||[]);renderOPager(res.page||1,res.totalPage||1);}).fail(function(x){alert('주문 목록을 불러오지 못했습니다.');console.error(x.responseText);});}
   function renderOrders(items){
-    var $tb = $('#ordersTable tbody').empty();
-    if(!items.length){ $tb.append('<tr><td colspan="7" class="text-center mini">데이터 없음</td></tr>'); return; }
+    var $tb=$('#ordersTable tbody').empty();
+    if(!items.length){$tb.append('<tr><td colspan="7" class="text-center mini">데이터 없음</td></tr>');return;}
     items.forEach(function(o){
-      var chipClass = (o.status==='PAID')?'chip-paid':(o.status==='SHIPPING')?'chip-ship':(o.status==='DELIVERED')?'chip-done':(o.status==='CANCELLED')?'chip-cancel':'';
-      var canDelete = (o.status==='PAID');
-      var statuses = ['PAID','SHIPPING','DELIVERED','CANCELLED'];
-      var opts = '';
-      for(var i=0;i<statuses.length;i++){
-        var s = statuses[i];
-        opts += '<option value="'+s+'"' + (s===o.status?' selected':'') + '>' + statusLabel(s) + '</option>';
-      }
-      var row = ''
-        + '<tr id="ord-'+o.orderId+'">'
-        +   '<td><div class="fw-bold">#'+o.orderId+'</div><div class="mini">'+fmtDate(o.orderDate)+'</div></td>'
-        +   '<td>'+fmtDate(o.orderDate)+'</td>'
-        +   '<td>'+o.userId+'</td>'
-        +   '<td><div class="text-truncate" style="max-width:520px;">'+escapeHtml(o.summary||'')+'</div>'
-        +       '<button class="btn btn-mini btn-soft mt-1" onclick="toggleItems('+o.orderId+')"><i class="bi bi-chevron-expand"></i> 상세</button>'
-        +   '</td>'
-        +   '<td class="text-right">'+fmtWon(o.totalAmount)+'</td>'
-        +   '<td class="text-center"><span class="chip '+chipClass+'">'+statusLabel(o.status)+'</span></td>'
-        +   '<td class="text-right">'
-        +     '<select id="sel-'+o.orderId+'" class="form-control form-control-sm d-inline-block" style="width:120px">'+opts+'</select> '
-        +     '<button class="btn btn-primary btn-sm btn-mini" onclick="applyStatus('+o.orderId+')">적용</button> '
-        +     '<button class="btn btn-outline-danger btn-sm btn-mini" '+(canDelete?'':'disabled')+' onclick="delOrder('+o.orderId+')">삭제</button>'
-        +   '</td>'
-        + '</tr>';
-      $tb.append(row);
+      var chip=(o.status==='PAID')?'chip-paid':(o.status==='SHIPPING')?'chip-ship':(o.status==='DELIVERED')?'chip-done':(o.status==='CANCELLED')?'chip-cancel':'';
+      var canDel=(o.status==='PAID');
+      var st=['PAID','SHIPPING','DELIVERED','CANCELLED']; var opts='';
+      for(var i=0;i<st.length;i++){var s=st[i];opts+='<option value="'+s+'"' + (s===o.status?' selected':'') + '>'+statusLabel(s)+'</option>';}
+      var row=''+
+      '<tr id="ord-'+o.orderId+'">'+
+      '<td><div class="fw-bold">#'+o.orderId+'</div><div class="mini">'+fmtDate(o.orderDate)+'</div></td>'+
+      '<td>'+fmtDate(o.orderDate)+'</td>'+
+      '<td>'+o.userId+'</td>'+
+      '<td><div class="text-truncate" style="max-width:520px;">'+escapeHtml(o.summary||'')+'</div><button class="btn btn-mini btn-soft mt-1" onclick="toggleItems('+o.orderId+')"><i class="bi bi-chevron-expand"></i> 상세</button></td>'+
+      '<td class="text-right">'+fmtWon(o.totalAmount)+'</td>'+
+      '<td class="text-center"><span class="chip '+chip+'">'+statusLabel(o.status)+'</span></td>'+
+      '<td class="text-right"><select id="sel-'+o.orderId+'" class="form-control form-control-sm d-inline-block" style="width:120px">'+opts+'</select> '+
+      '<button class="btn btn-primary btn-sm btn-mini" onclick="applyStatus('+o.orderId+')">적용</button> '+
+      '<button class="btn btn-outline-danger btn-sm btn-mini" '+(canDel?'':'disabled')+' onclick="delOrder('+o.orderId+')">삭제</button></td>'+
+      '</tr>'; $tb.append(row);
     });
   }
-
-  function renderOPager(page,totalPage){
-    var $pg = $('#ordersPager').empty();
-    if(totalPage<=1) return;
-    for(var i=1;i<=totalPage;i++){
-      var act = (i===page)?'active':'';
-      $pg.append(
-        '<li class="page-item '+act+'">'
-          + '<a class="page-link" href="#" onclick="loadOrders('+i+');return false;">'+i+'</a>'
-        + '</li>'
-      );
-    }
-  }
-
-  function applyStatus(id){
-    var val = $('#sel-'+id).val();
-    $.ajax({
-      url: ORD.api + '/' + id + '/status',
-      method:'PUT', headers: ordHeaders(),
-      data: JSON.stringify({status:val}),
-      success: function(){ loadOrders(ORD.page); },
-      error: function(xhr){ alert('상태 변경 실패'); console.error(xhr.responseText); }
-    });
-  }
-
-  function delOrder(id){
-    if(!confirm('정말 삭제할까요? (결제 완료 단계만 가능)')) return;
-    $.ajax({
-      url: ORD.api + '/' + id,
-      method:'DELETE', headers: ordHeaders(),
-      success: function(){ loadOrders(ORD.page); },
-      error: function(xhr){
-        if(xhr.status===409) alert('결제 완료 상태에서만 삭제할 수 있습니다.');
-        else alert('삭제 실패');
-        console.error(xhr.responseText);
-      }
-    });
-  }
-
+  function renderOPager(p,t){var $pg=$('#ordersPager').empty();if(t<=1)return;for(var i=1;i<=t;i++){var a=(i===p)?'active':'';$pg.append('<li class="page-item '+a+'"><a class="page-link" href="#" onclick="loadOrders('+i+');return false;">'+i+'</a></li>');}}
+  function applyStatus(id){var v=$('#sel-'+id).val();$.ajax({url:ORD.api+'/'+id+'/status',method:'PUT',headers:ordHeaders(),data:JSON.stringify({status:v}),success:function(){loadOrders(ORD.page);},error:function(x){alert('상태 변경 실패');console.error(x.responseText);}});}
+  function delOrder(id){if(!confirm('정말 삭제할까요? (결제 완료 단계만 가능)'))return;$.ajax({url:ORD.api+'/'+id,method:'DELETE',headers:ordHeaders(),success:function(){loadOrders(ORD.page);},error:function(x){if(x.status===409)alert('결제 완료 상태에서만 삭제할 수 있습니다.');else alert('삭제 실패');console.error(x.responseText);}});}
   function toggleItems(id){
-    var $row = $('#ord-'+id);
-    var opened = $row.next().hasClass('row-items');
-    if(opened){ $row.next().remove(); return; }
-    $.get(ORD.api + '/' + id, function(o){
-      var items = o.items || [];
-      var rows = '';
+    var $r=$('#ord-'+id);var opened=$r.next().hasClass('row-items');if(opened){$r.next().remove();return;}
+    $.get(ORD.api+'/'+id,function(o){
+      var items=o.items||[];var rows='';
       for(var i=0;i<items.length;i++){
-        var it = items[i];
-        var price = fmtWon(it.price);
-        var qty = (it.quantity!=null?it.quantity:0);
-        var total = fmtWon((Number(it.price||0)*Number(qty||0)));
-        var title = escapeHtml((it.book && it.book.title) ? it.book.title : ('#'+it.bookId));
-        rows += '<tr>'
-              +   '<td class="text-muted">'+(i+1)+'</td>'
-              +   '<td>'+title+'</td>'
-              +   '<td class="text-right">'+price+'</td>'
-              +   '<td class="text-right">'+qty+'</td>'
-              +   '<td class="text-right">'+total+'</td>'
-              + '</tr>';
+        var it=items[i];var price=fmtWon(it.price);var qty=(it.quantity!=null?it.quantity:0);
+        var total=fmtWon((Number(it.price||0)*Number(qty||0)));
+        var title=escapeHtml((it.book&&it.book.title)?it.book.title:('#'+it.bookId));
+        rows+='<tr><td class="text-muted">'+(i+1)+'</td><td>'+title+'</td><td class="text-right">'+price+'</td><td class="text-right">'+qty+'</td><td class="text-right">'+total+'</td></tr>';
       }
-      if(rows===''){ rows = '<tr><td colspan="5" class="text-center mini">아이템 없음</td></tr>'; }
-      var html = document.getElementById('tpl-items').innerHTML.replace('{{rows}}', rows);
-      $row.after(html);
+      if(rows===''){rows='<tr><td colspan="5" class="text-center mini">아이템 없음</td></tr>';}
+      var html=document.getElementById('tpl-items').innerHTML.replace('{{rows}}',rows);$r.after(html);
     });
   }
-
-  $('#orderSearchForm').on('submit', function(e){
-    e.preventDefault();
-    ORD.status = $('#ordStatus').val();
-    ORD.keyword = $('#ordKeyword').val().trim();
-    loadOrders(1);
-  });
-
-  var ordersLoadedOnce=false;
-  $('a[href="#tab-orders"]').on('shown.bs.tab', function(){ if(!ordersLoadedOnce){ ordersLoadedOnce=true; loadOrders(1);} });
+  $('#orderSearchForm').on('submit',function(e){e.preventDefault();ORD.status=$('#ordStatus').val();ORD.keyword=$('#ordKeyword').val().trim();loadOrders(1);});
+  var ordersLoadedOnce=false;$('a[href="#tab-orders"]').on('shown.bs.tab',function(){if(!ordersLoadedOnce){ordersLoadedOnce=true;loadOrders(1);}});
 
   /* ===== Books (AJAX) ===== */
-  var BK = {
-    ctx: '${ctx}',
-    api: '${ctx}/admin/api/books',
-    page: 1, size: 10, keyword: '',
-    csrf: (function(){
-      var t=document.querySelector('meta[name="_csrf"]');
-      var h=document.querySelector('meta[name="_csrf_header"]');
-      return { token: t?t.content:null, header: h?h.content:null };
-    })()
-  };
-  function bkHeaders(){ var h={'Content-Type':'application/json'}; if(BK.csrf.token&&BK.csrf.header) h[BK.csrf.header]=BK.csrf.token; return h; }
-
-  function loadBooks(page){
-    if(!page) page=1;
-    BK.page=page;
-    $.ajax({
-      url: BK.api, method:'GET',
-      data: {page:BK.page, size:BK.size, keyword:BK.keyword},
-      success: function(res){
-        renderBooks(res.items||[]);
-        renderPager(res.page||1, res.totalPage||1);
-      },
-      error: function(xhr){ alert('도서 목록을 불러오지 못했습니다.'); console.error(xhr.responseText); }
-    });
-  }
-
+  var BK={ctx:'${ctx}',api:'${ctx}/admin/api/books',page:1,size:10,keyword:'',csrf:(function(){var t=document.querySelector('meta[name="_csrf"]');var h=document.querySelector('meta[name="_csrf_header"]');return{token:t?t.content:null,header:h?h.content:null};})()};
+  function bkHeaders(){var h={'Content-Type':'application/json'};if(BK.csrf.token&&BK.csrf.header)h[BK.csrf.header]=BK.csrf.token;return h;}
+  function loadBooks(p){if(!p)p=1;BK.page=p;$.ajax({url:BK.api,method:'GET',data:{page:BK.page,size:BK.size,keyword:BK.keyword},success:function(res){renderBooks(res.items||[]);renderPager(res.page||1,res.totalPage||1);},error:function(x){alert('도서 목록을 불러오지 못했습니다.');console.error(x.responseText);}});}
   function renderBooks(items){
     var $tb=$('#booksTable tbody').empty();
-    if(!items.length){ $tb.append('<tr><td colspan="6" class="text-center mini">검색 결과가 없습니다.</td></tr>'); return; }
+    if(!items.length){$tb.append('<tr><td colspan="6" class="text-center mini">검색 결과가 없습니다.</td></tr>');return;}
     items.forEach(function(b){
-      var cover = (b.cover_image || b.coverImage) ? (b.cover_image || b.coverImage) : (BK.ctx + '/resources/img/noimg.png');
-      var row = ''
-        + '<tr>'
-        +   '<td><img src="'+cover+'" style="width:52px;height:52px;object-fit:cover;border-radius:10px;border:1px solid #2a3340;"></td>'
-        +   '<td><div class="fw-bold">'+escapeHtml(b.title||'')+'</div><div class="text-muted small text-truncate" style="max-width:520px;">'+escapeHtml(b.description||'')+'</div></td>'
-        +   '<td>'+escapeHtml(b.author||'')+'</td>'
-        +   '<td class="text-right">'+fmtWon(b.price)+'</td>'
-        +   '<td class="text-right">'+((b.stock!=null)?b.stock:0)+'</td>'
-        +   '<td class="text-right">'
-        +     '<button class="btn btn-sm btn-outline-secondary" data-action="edit" data-id="'+b.bookId+'">수정</button> '
-        +     '<button class="btn btn-sm btn-outline-danger" data-action="del" data-id="'+b.bookId+'">삭제</button>'
-        +   '</td>'
-        + '</tr>';
+      var cover=(b.cover_image||b.coverImage)?(b.cover_image||b.coverImage):(BK.ctx+'/resources/img/noimg.png');
+      var row='<tr>'+
+        '<td><img src="'+cover+'" style="width:52px;height:52px;object-fit:cover;border-radius:10px;border:1px solid #2a3340;"></td>'+
+        '<td><div class="fw-bold">'+escapeHtml(b.title||'')+'</div><div class="text-muted small text-truncate-2">'+escapeHtml(b.description||'')+'</div></td>'+
+        '<td>'+escapeHtml(b.author||'')+'</td>'+
+        '<td class="text-right">'+fmtWon(b.price)+'</td>'+
+        '<td class="text-right">'+((b.stock!=null)?b.stock:0)+'</td>'+
+        '<td class="text-right"><button class="btn btn-sm btn-outline-secondary" data-action="edit" data-id="'+b.bookId+'">수정</button> '+
+        '<button class="btn btn-sm btn-outline-danger" data-action="del" data-id="'+b.bookId+'">삭제</button></td>'+
+      '</tr>';
       $tb.append(row);
     });
   }
-
-  function renderPager(page,totalPage){
-    var $pg=$('#booksPager').empty();
-    if(totalPage<=1) return;
-    for(var i=1;i<=totalPage;i++){
-      var active=(i===page)?'active':'';
-      $pg.append('<li class="page-item '+active+'"><a class="page-link" href="#" data-page="'+i+'">'+i+'</a></li>');
-    }
-  }
-
-  function openNew(){
-    $('#bookModal .modal-title').text('도서 등록');
-    $('#bookForm')[0].reset();
-    $('#bookId').val('');
-    $('#coverPreview').hide();
-    $('#bookModal').modal('show');
-  }
+  function renderPager(p,t){var $pg=$('#booksPager').empty();if(t<=1)return;for(var i=1;i<=t;i++){var a=(i===p)?'active':'';$pg.append('<li class="page-item '+a+'"><a class="page-link" href="#" data-page="'+i+'">'+i+'</a></li>');}}
+  function openNew(){ $('#bookModal .modal-title').text('도서 등록'); $('#bookForm')[0].reset(); $('#bookId').val(''); $('#coverPreview').hide(); $('#bookModal').modal('show');}
   function openEdit(id){
-    $.get(BK.api + '/' + id, function(b){
+    $.get(BK.api+'/'+id,function(b){
       $('#bookModal .modal-title').text('도서 수정');
-      $('#bookId').val(b.bookId);
-      $('#title').val(b.title);
-      $('#author').val(b.author);
-      $('#description').val(b.description);
-      $('#price').val(b.price);
-      $('#stock').val(b.stock);
-      $('#cover_image').val(b.cover_image || b.coverImage || '');
-      if(b.cover_image || b.coverImage){ $('#coverPreview').attr('src', (b.cover_image||b.coverImage)).show(); } else { $('#coverPreview').hide(); }
+      $('#bookId').val(b.bookId); $('#title').val(b.title); $('#author').val(b.author);
+      $('#description').val(b.description); $('#price').val(b.price); $('#stock').val(b.stock);
+      $('#cover_image').val(b.cover_image||b.coverImage||'');
+      if(b.cover_image||b.coverImage){$('#coverPreview').attr('src',(b.cover_image||b.coverImage)).show();}else{$('#coverPreview').hide();}
       $('#bookModal').modal('show');
     });
   }
   function saveBook(){
     var id=$('#bookId').val();
-    var payload={ title:$('#title').val(), author:$('#author').val(), description:$('#description').val(),
-                  price:Number($('#price').val()||0), stock:Number($('#stock').val()||0), cover_image:$('#cover_image').val() };
-    var method=id?'PUT':'POST';
-    var url=id?(BK.api+'/'+id):BK.api;
-    $.ajax({ url:url, method:method, headers:bkHeaders(), data:JSON.stringify(payload),
-      success:function(){ $('#bookModal').modal('hide'); loadBooks(BK.page); },
-      error:function(xhr){ alert('저장에 실패했습니다.'); console.error(xhr.responseText); }
+    var payload={title:$('#title').val(),author:$('#author').val(),description:$('#description').val(),
+                 price:Number($('#price').val()||0),stock:Number($('#stock').val()||0),cover_image:$('#cover_image').val()};
+    var method=id?'PUT':'POST';var url=id?(BK.api+'/'+id):BK.api;
+    $.ajax({url:url,method:method,headers:bkHeaders(),data:JSON.stringify(payload),
+      success:function(){$('#bookModal').modal('hide');loadBooks(BK.page);},
+      error:function(x){alert('저장에 실패했습니다.');console.error(x.responseText);}
     });
   }
   function delBook(id){
-    if(!confirm('정말 삭제할까요?')) return;
-    $.ajax({ url:BK.api+'/'+id, method:'DELETE', headers:bkHeaders(),
-      success:function(){ loadBooks(BK.page); },
-      error:function(xhr){ alert('삭제에 실패했습니다.'); console.error(xhr.responseText); }
+    if(!confirm('정말 삭제할까요?'))return;
+    $.ajax({url:BK.api+'/'+id,method:'DELETE',headers:bkHeaders(),
+      success:function(){loadBooks(BK.page);},
+      error:function(x){alert('삭제에 실패했습니다.');console.error(x.responseText);}
     });
   }
-
-  /* Books events */
   $('#btnNewBook').on('click', openNew);
   $('#btnSaveBook').on('click', saveBook);
   $('#cover_image').on('input', function(){ var v=$(this).val().trim(); if(v){ $('#coverPreview').attr('src', v).show(); } else { $('#coverPreview').hide(); } });
@@ -750,121 +728,175 @@
   $('#booksTable').on('click', 'button[data-action="del"]',  function(){ delBook($(this).data('id')); });
   $('#booksPager').on('click', 'a.page-link', function(e){ e.preventDefault(); var p=parseInt($(this).data('page'),10); if(p) loadBooks(p); });
   $('#bookSearchForm').on('submit', function(e){ e.preventDefault(); BK.keyword=$('#bkKeyword').val().trim(); loadBooks(1); });
-  var booksLoadedOnce=false;
-  $('a[href="#tab-books"]').on('shown.bs.tab', function(){ if(!booksLoadedOnce){ booksLoadedOnce=true; loadBooks(1);} });
+  var booksLoadedOnce=false;$('a[href="#tab-books"]').on('shown.bs.tab', function(){ if(!booksLoadedOnce){ booksLoadedOnce=true; loadBooks(1);} });
 
   /* ===== Users (AJAX) ===== */
-  var U = {
-    api: '${ctx}/admin/api/users',
-    page: 1, size: 10, role: '', blocked: '', keyword: '',
-    csrf: (function(){
-      var t=document.querySelector('meta[name="_csrf"]');
-      var h=document.querySelector('meta[name="_csrf_header"]');
-      return {token:t?t.content:null, header:h?h.content:null};
-    })()
-  };
-  function uHeaders(){ var h={'Content-Type':'application/json'}; if(U.csrf.token&&U.csrf.header) h[U.csrf.header]=U.csrf.token; return h; }
-  function badgeBlocked(b){
-    if(b==='Y' || b===true || b===1){ return '<span class="chip chip-cancel">차단</span>'; }
-    return '<span class="chip chip-done">정상</span>';
-  }
-
-  function loadUsers(page){
-    if(!page) page=1;
-    U.page=page;
-    $.get(U.api, {page:U.page, size:U.size, role:U.role, blocked:U.blocked, keyword:U.keyword}, function(res){
-      renderUsers(res.items||[]);
-      renderUPager(res.page||1, res.totalPage||1);
-    }).fail(function(xhr){ alert('유저 목록을 불러오지 못했습니다.'); console.error(xhr.responseText); });
-  }
-
+  var U={api:'${ctx}/admin/api/users',page:1,size:10,role:'',blocked:'',keyword:'',csrf:(function(){var t=document.querySelector('meta[name="_csrf"]');var h=document.querySelector('meta[name="_csrf_header"]');return{token:t?t.content:null,header:h?h.content:null};})()};
+  function uHeaders(){var h={'Content-Type':'application/json'};if(U.csrf.token&&U.csrf.header)h[U.csrf.header]=U.csrf.token;return h;}
+  function badgeBlocked(b){ if(b==='Y'||b===true||b===1){return '<span class="chip chip-cancel">차단</span>';} return '<span class="chip chip-done">정상</span>'; }
+  function loadUsers(p){if(!p)p=1;U.page=p;$.get(U.api,{page:U.page,size:U.size,role:U.role,blocked:U.blocked,keyword:U.keyword},function(res){renderUsers(res.items||[]);renderUPager(res.page||1,res.totalPage||1);}).fail(function(x){alert('유저 목록을 불러오지 못했습니다.');console.error(x.responseText);});}
   function renderUsers(items){
-    var $tb = $('#usersTable tbody').empty();
-    if(!items.length){ $tb.append('<tr><td colspan="6" class="text-center mini">데이터 없음</td></tr>'); return; }
+    var $tb=$('#usersTable tbody').empty();
+    if(!items.length){$tb.append('<tr><td colspan="6" class="text-center mini">데이터 없음</td></tr>');return;}
     for(var i=0;i<items.length;i++){
-      var u = items[i];
-      var roleSel = ''
-        + '<select id="role-'+u.userId+'" class="form-control form-control-sm d-inline-block" style="width:120px">'
-        +   '<option value="ADMIN"'+(u.role==='ADMIN'?' selected':'')+'>ADMIN</option>'
-        +   '<option value="CUSTOMER"'+(u.role!=='ADMIN'?' selected':'')+'>CUSTOMER</option>'
-        + '</select>';
-      var row = ''
-        + '<tr id="user-'+u.userId+'">'
-        +   '<td>#'+u.userId+'</td>'
-        +   '<td>'+escapeHtml(u.loginId||'')+'</td>'
-        +   '<td>'+escapeHtml(u.name||'')+'</td>'
-        +   '<td class="text-center">'+roleSel+'</td>'
-        +   '<td class="text-center">'+badgeBlocked(u.blocked)+'</td>'
-        +   '<td class="text-right">'
-        +     '<button class="btn btn-primary btn-sm btn-mini" onclick="applyRole('+u.userId+')">권한적용</button> '
-        +     ( (u.blocked==='Y'||u.blocked===true||u.blocked===1)
-                ? '<button class="btn btn-outline-secondary btn-sm btn-mini" onclick="unblockUser('+u.userId+')">차단해제</button> '
-                : '<button class="btn btn-outline-warning btn-sm btn-mini" onclick="blockUser('+u.userId+')">차단</button> ')
-        +     '<button class="btn btn-outline-danger btn-sm btn-mini" onclick="deleteUser('+u.userId+')">삭제</button>'
-        +   '</td>'
-        + '</tr>';
+      var u=items[i];
+      var roleSel='<select id="role-'+u.userId+'" class="form-control form-control-sm d-inline-block" style="width:120px">'+
+                  '<option value="ADMIN"'+(u.role==='ADMIN'?' selected':'')+'>ADMIN</option>'+
+                  '<option value="CUSTOMER"'+(u.role!=='ADMIN'?' selected':'')+'>CUSTOMER</option>'+
+                  '</select>';
+      var row='<tr id="user-'+u.userId+'">'+
+        '<td>#'+u.userId+'</td>'+
+        '<td>'+escapeHtml(u.loginId||'')+'</td>'+
+        '<td>'+escapeHtml(u.name||'')+'</td>'+
+        '<td class="text-center">'+roleSel+'</td>'+
+        '<td class="text-center">'+badgeBlocked(u.blocked)+'</td>'+
+        '<td class="text-right">'+
+          '<button class="btn btn-primary btn-sm btn-mini" onclick="applyRole('+u.userId+')">권한적용</button> '+
+          ((u.blocked==='Y'||u.blocked===true||u.blocked===1)
+            ? '<button class="btn btn-outline-secondary btn-sm btn-mini" onclick="unblockUser('+u.userId+')">차단해제</button> '
+            : '<button class="btn btn-outline-warning btn-sm btn-mini" onclick="blockUser('+u.userId+')">차단</button> ') +
+          '<button class="btn btn-outline-danger btn-sm btn-mini" onclick="deleteUser('+u.userId+')">삭제</button>'+
+        '</td>'+
+      '</tr>';
       $tb.append(row);
     }
   }
+  function renderUPager(p,t){var $pg=$('#usersPager').empty();if(t<=1)return;for(var i=1;i<=t;i++){var a=(i===p)?'active':'';$pg.append('<li class="page-item '+a+'"><a class="page-link" href="#" onclick="loadUsers('+i+');return false;">'+i+'</a></li>');}}
+  function applyRole(id){var v=$('#role-'+id).val();$.ajax({url:U.api+'/'+id+'/role',method:'PUT',headers:uHeaders(),data:JSON.stringify({role:v}),success:function(){loadUsers(U.page);},error:function(x){alert('권한 변경 실패');console.error(x.responseText);}});}
+  function blockUser(id){if(!confirm('해당 사용자를 차단할까요?'))return;$.ajax({url:U.api+'/'+id+'/block',method:'PUT',headers:uHeaders(),data:JSON.stringify({blocked:true}),success:function(){loadUsers(U.page);},error:function(x){alert('차단 실패');console.error(x.responseText);}});}
+  function unblockUser(id){$.ajax({url:U.api+'/'+id+'/block',method:'PUT',headers:uHeaders(),data:JSON.stringify({blocked:false}),success:function(){loadUsers(U.page);},error:function(x){alert('차단 해제 실패');console.error(x.responseText);}});}
+  function deleteUser(id){if(!confirm('정말 삭제할까요?'))return;$.ajax({url:U.api+'/'+id,method:'DELETE',headers:uHeaders(),success:function(){loadUsers(U.page);},error:function(x){alert('삭제 실패');console.error(x.responseText);}});}
+  $('#userSearchForm').on('submit', function(e){e.preventDefault();U.role=$('#userRoleFilter').val();U.blocked=$('#userBlockedFilter').val();U.keyword=$('#userKeyword').val().trim();loadUsers(1);});
+  var usersLoadedOnce=false;$('a[href="#tab-users"]').on('shown.bs.tab', function(){ if(!usersLoadedOnce){ usersLoadedOnce=true; loadUsers(1);} });
 
-  function renderUPager(page,totalPage){
-    var $pg = $('#usersPager').empty();
-    if(totalPage<=1) return;
-    for(var i=1;i<=totalPage;i++){
-      var act = (i===page)?'active':'';
-      $pg.append('<li class="page-item '+act+'"><a class="page-link" href="#" onclick="loadUsers('+i+');return false;">'+i+'</a></li>');
+  /* ===== Reviews (AJAX) =====
+     백엔드 API 계약 (예상):
+       GET    ${ctx}/admin/api/reviews?page=&size=&rating=&status=&keyword=&bookId=
+               -> { page, size, totalPage, items:[{reviewId,bookId,bookTitle?,userId,userLoginId,rating,content,createdAt,status}] }
+       PUT    ${ctx}/admin/api/reviews/{id}/status  body:{status:"VISIBLE"|"HIDDEN"}
+       DELETE ${ctx}/admin/api/reviews/{id}
+       (선택) GET ${ctx}/admin/api/reviews/{id} -> 단건 상세
+  */
+  var RV={api:'${ctx}/admin/api/reviews',page:1,size:10,rating:'',status:'',keyword:'',bookId:'',csrf:(function(){var t=document.querySelector('meta[name="_csrf"]');var h=document.querySelector('meta[name="_csrf_header"]');return{token:t?t.content:null,header:h?h.content:null};})()};
+  function rvHeaders(){var h={'Content-Type':'application/json'};if(RV.csrf.token&&RV.csrf.header)h[RV.csrf.header]=RV.csrf.token;return h;}
+
+  function loadReviews(p){
+    if(!p)p=1; RV.page=p;
+    var q={page:RV.page,size:RV.size};
+    if(RV.rating) q.rating=RV.rating;
+    if(RV.status) q.status=RV.status;
+    if(RV.keyword) q.keyword=RV.keyword;
+    if(RV.bookId) q.bookId=RV.bookId;
+    $.get(RV.api, q, function(res){
+      renderReviews(res.items||[]);
+      renderRPager(res.page||1, res.totalPage||1);
+    }).fail(function(x){
+      alert('리뷰 목록을 불러오지 못했습니다.');
+      console.error(x.responseText);
+    });
+  }
+
+  function reviewStatusChip(s){
+    return (s==='HIDDEN')
+      ? '<span class="chip chip-hid">숨김</span>'
+      : '<span class="chip chip-vis">노출</span>';
+  }
+
+  function renderReviews(items){
+    var $tb=$('#reviewsTable tbody').empty();
+    if(!items.length){ $tb.append('<tr><td colspan="8" class="text-center mini">데이터 없음</td></tr>'); return; }
+
+    items.forEach(function(r){
+      var bookText = r.bookTitle ? (escapeHtml(r.bookTitle)+' <span class="text-muted">#'+r.bookId+'</span>')
+                                 : ('#'+r.bookId);
+      var contentShort = escapeHtml(String(r.content||'')).slice(0,120);
+      if((r.content||'').length>120) contentShort += '…';
+      var row = ''+
+        '<tr id="rv-'+r.reviewId+'">'+
+          '<td>#'+r.reviewId+'</td>'+
+          '<td>'+bookText+'</td>'+
+          '<td>'+(escapeHtml(r.userLoginId||('#'+r.userId)))+'</td>'+
+          '<td class="text-center">'+stars(r.rating)+'</td>'+
+          '<td><div class="text-truncate-2">'+contentShort+'</div></td>'+
+          '<td>'+fmtDate(r.createdAt)+'</td>'+
+          '<td class="text-center">'+reviewStatusChip(r.status||'VISIBLE')+'</td>'+
+          '<td class="text-right">'+
+            '<div class="btn-group btn-group-sm" role="group">'+
+              '<button class="btn btn-soft" onclick="openReviewModal('+r.reviewId+', \''+escapeHtml(r.bookTitle||('#'+r.bookId))+'\', \''+escapeHtml(r.userLoginId||('#'+r.userId))+'\', '+(Number(r.rating)||0)+', \''+fmtDate(r.createdAt)+'\')">보기</button>'+
+              ( (r.status==='HIDDEN')
+                ? '<button class="btn btn-outline-success" onclick="setReviewStatus('+r.reviewId+',\'VISIBLE\')">노출</button>'
+                : '<button class="btn btn-outline-warning" onclick="setReviewStatus('+r.reviewId+',\'HIDDEN\')">숨김</button>' )+
+              '<button class="btn btn-outline-danger" onclick="deleteReview('+r.reviewId+')">삭제</button>'+
+            '</div>'+
+          '</td>'+
+        '</tr>';
+      $tb.append(row);
+    });
+  }
+
+  function renderRPager(p,t){
+    var $pg=$('#reviewsPager').empty();
+    if(t<=1) return;
+    for(var i=1;i<=t;i++){
+      var a=(i===p)?'active':'';
+      $pg.append('<li class="page-item '+a+'"><a class="page-link" href="#" onclick="loadReviews('+i+');return false;">'+i+'</a></li>');
     }
   }
 
-  function applyRole(id){
-    var val = $('#role-'+id).val();
+  function setReviewStatus(id, st){
     $.ajax({
-      url: U.api + '/' + id + '/role',
-      method:'PUT', headers:uHeaders(),
-      data: JSON.stringify({role:val}),
-      success: function(){ loadUsers(U.page); },
-      error: function(xhr){ alert('권한 변경 실패'); console.error(xhr.responseText); }
-    });
-  }
-  function blockUser(id){
-    if(!confirm('해당 사용자를 차단할까요?')) return;
-    $.ajax({
-      url: U.api + '/' + id + '/block',
-      method:'PUT', headers:uHeaders(),
-      data: JSON.stringify({blocked:true}),
-      success: function(){ loadUsers(U.page); },
-      error: function(xhr){ alert('차단 실패'); console.error(xhr.responseText); }
-    });
-  }
-  function unblockUser(id){
-    $.ajax({
-      url: U.api + '/' + id + '/block',
-      method:'PUT', headers:uHeaders(),
-      data: JSON.stringify({blocked:false}),
-      success: function(){ loadUsers(U.page); },
-      error: function(xhr){ alert('차단 해제 실패'); console.error(xhr.responseText); }
-    });
-  }
-  function deleteUser(id){
-    if(!confirm('정말 삭제할까요?')) return;
-    $.ajax({
-      url: U.api + '/' + id,
-      method:'DELETE', headers:uHeaders(),
-      success: function(){ loadUsers(U.page); },
-      error: function(xhr){ alert('삭제 실패'); console.error(xhr.responseText); }
+      url: RV.api + '/' + id + '/status',
+      method:'PUT', headers: rvHeaders(),
+      data: JSON.stringify({status: st}),
+      success: function(){ loadReviews(RV.page); },
+      error: function(x){ alert('상태 변경 실패'); console.error(x.responseText); }
     });
   }
 
-  $('#userSearchForm').on('submit', function(e){
+  function deleteReview(id){
+    if(!confirm('해당 리뷰를 삭제할까요?')) return;
+    $.ajax({
+      url: RV.api + '/' + id,
+      method:'DELETE', headers: rvHeaders(),
+      success: function(){ loadReviews(RV.page); },
+      error: function(x){ alert('삭제 실패'); console.error(x.responseText); }
+    });
+  }
+
+  // 리뷰 상세 모달: 목록의 요약으로 열되, 필요시 단건 API로 갱신해도 됨
+  function openReviewModal(id, bookText, userText, rating, created){
+    // 목록에 없는 전체 본문 로드가 필요하면 아래 GET 사용
+    $.get(RV.api + '/' + id, function(r){
+      var content = (r && r.content!=null) ? String(r.content) : '';
+      $('#rvmBook').text(r.bookTitle ? (r.bookTitle + ' #' + r.bookId) : ('#'+(r.bookId||'')));
+      $('#rvmUser').text(r.userLoginId ? r.userLoginId : ('#'+(r.userId||'')));
+      $('#rvmRating').text(stars(r.rating));
+      $('#rvmDate').text(fmtDate(r.createdAt));
+      $('#rvmContent').text(content);
+      $('#rvModal').modal('show');
+    }).fail(function(){
+      // 단건 API가 없다면, 목록에서 받은 데이터로 구성
+      $('#rvmBook').text(bookText);
+      $('#rvmUser').text(userText);
+      $('#rvmRating').text(stars(rating));
+      $('#rvmDate').text(created);
+      $('#rvmContent').text('상세 API가 비활성화되어 목록 요약만 표시합니다.');
+      $('#rvModal').modal('show');
+    });
+  }
+
+  $('#rvSearchForm').on('submit', function(e){
     e.preventDefault();
-    U.role = $('#userRoleFilter').val();
-    U.blocked = $('#userBlockedFilter').val();
-    U.keyword = $('#userKeyword').val().trim();
-    loadUsers(1);
+    RV.rating = $('#rvRating').val();
+    RV.status = $('#rvStatus').val();
+    RV.bookId = $('#rvBookId').val().trim();
+    RV.keyword = $('#rvKeyword').val().trim();
+    loadReviews(1);
   });
 
-  var usersLoadedOnce=false;
-  $('a[href="#tab-users"]').on('shown.bs.tab', function(){ if(!usersLoadedOnce){ usersLoadedOnce=true; loadUsers(1);} });
+  var reviewsLoadedOnce=false;
+  $('a[href="#tab-reviews"]').on('shown.bs.tab', function(){ if(!reviewsLoadedOnce){ reviewsLoadedOnce=true; loadReviews(1);} });
+
 </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 package controller;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,74 +20,106 @@ import vo.Orders;
 public class AdminController {
 
     @Autowired private MemberService memberService;
-    @Autowired private BookService bookService;
-    @Autowired private OrderService orderService;
+    @Autowired private BookService   bookService;
+    @Autowired private OrderService  orderService;
 
+    /**
+     * ê´€ë¦¬ì ëŒ€ì‹œë³´ë“œ
+     */
     @RequestMapping("/admin/dashboard")
     public String dashboard(Model model) throws Exception {
 
-        // === KPI (³Î ¹æ¾îÀûÀ¸·Î 0 µğÆúÆ®) ===
+        // ===== KPI(ì—†ìœ¼ë©´ 0) =====
         int totalUsers   = safeInt(() -> memberService.countUsers());
         int totalBooks   = safeInt(() -> bookService.countBooks());
         int todayOrders  = safeInt(() -> orderService.countTodayOrders());
         int todayRevenue = safeInt(() -> orderService.sumTodayRevenue());
 
-        // === ÃÖ±Ù ÁÖ¹® / Àç°í ÀÓ¹Ú ===
+        // ì¶œê³  ëŒ€ê¸° = ê²°ì œì™„ë£Œ(PAID), ë°°ì†¡ ì¤‘ = SHIPPING
+        int pendingCount  = safeInt(() -> orderService.countByStatus("PAID"));
+        int shippingCount = safeInt(() -> orderService.countByStatus("SHIPPING"));
+
+        // ===== ìµœê·¼ ì£¼ë¬¸ / ì¬ê³  ì„ë°• =====
         List<Orders> recentOrders = orEmpty(orderService.findRecent(5));
         List<Book>   lowStock     = orEmpty(bookService.findLowStockBooks(5, 5));
 
-        // === ¿ùº° ¸ÅÃâ ===
-        List<Map<String,Object>> m = orEmpty(orderService.monthlyRevenue(6));
-        List<String> mLabels = m.stream()
-                .map(AdminController::labelFrom)
-                .collect(Collectors.toList());
-        List<Integer> mData  = m.stream()
-                .map(AdminController::valueFrom)
-                .collect(Collectors.toList());
+        // ===== ì¼ìë³„ ë§¤ì¶œ(ìµœê·¼ 14ì¼) =====
+        // orderService.dailyRevenue(days) ëŠ”
+        //   d(ë˜ëŠ” date) = java.util.Date ë˜ëŠ” 'YYYY-MM-DD' ë¬¸ìì—´
+        //   amount(ë˜ëŠ” total/sum/value ë“±) = ë§¤ì¶œí•©
+        // í˜•íƒœì˜ List<Map<String,Object>>ë¥¼ ë°˜í™˜í•œë‹¤ê³  ê°€ì •
+        int days = 14;
+        List<Map<String,Object>> daily = orEmpty(orderService.dailyRevenue(days));
+        List<String> dLabels = daily.stream().map(AdminController::labelFrom).collect(Collectors.toList());
+        List<Integer> dData  = daily.stream().map(AdminController::valueFrom).collect(Collectors.toList());
 
-        // === ÁÖ¹® »óÅÂ ºĞÆ÷ ===
+        // ===== ì£¼ë¬¸ ìƒíƒœ í†µê³„ =====
         List<Map<String,Object>> s = orEmpty(orderService.statusCounts());
         List<String> sLabels = s.stream().map(AdminController::labelFrom).collect(Collectors.toList());
         List<Integer> sData  = s.stream().map(AdminController::valueFrom).collect(Collectors.toList());
 
-        // === Ä«Å×°í¸® ºĞÆ÷ (BookMapper.categoryCounts: CATEGORY/TOTAL ·Î ¿È) ===
+        // ===== ì¹´í…Œê³ ë¦¬ í†µê³„ =====
         List<Map<String,Object>> c = orEmpty(bookService.categoryCounts());
         List<String> cLabels = c.stream().map(AdminController::labelFrom).collect(Collectors.toList());
         List<Integer> cData  = c.stream().map(AdminController::valueFrom).collect(Collectors.toList());
 
-        // === JSON Á÷·ÄÈ­ (JSP¿¡¼­ ±×´ë·Î ${}·Î Ãâ·Â °¡´É) ===
+        // ===== JSON ì§ë ¬í™” (JSPì—ì„œ ê·¸ëŒ€ë¡œ ${}ë¡œ ì¶œë ¥) =====
         ObjectMapper om = new ObjectMapper();
-        model.addAttribute("revenueLabels", om.writeValueAsString(mLabels));
-        model.addAttribute("revenueData",   om.writeValueAsString(mData));
-        model.addAttribute("statusLabels",  om.writeValueAsString(sLabels));
-        model.addAttribute("statusData",    om.writeValueAsString(sData));
-        model.addAttribute("categoryLabels",om.writeValueAsString(cLabels));
-        model.addAttribute("categoryData",  om.writeValueAsString(cData));
+        model.addAttribute("revenueLabels",  om.writeValueAsString(dLabels)); // ì¼ìë³„
+        model.addAttribute("revenueData",    om.writeValueAsString(dData));   // ì¼ìë³„
+        model.addAttribute("statusLabels",   om.writeValueAsString(sLabels));
+        model.addAttribute("statusData",     om.writeValueAsString(sData));
+        model.addAttribute("categoryLabels", om.writeValueAsString(cLabels));
+        model.addAttribute("categoryData",   om.writeValueAsString(cData));
 
-        // === ºä ¸ğµ¨ ===
-        model.addAttribute("totalUsers", totalUsers);
-        model.addAttribute("totalBooks", totalBooks);
-        model.addAttribute("todayOrders", todayOrders);
-        model.addAttribute("todayRevenue", todayRevenue);
-        model.addAttribute("recentOrders", recentOrders);
+        // ===== ìˆ«ì/ëª©ë¡ ë°”ì¸ë”© =====
+        model.addAttribute("totalUsers",    totalUsers);
+        model.addAttribute("totalBooks",    totalBooks);
+        model.addAttribute("todayOrders",   todayOrders);
+        model.addAttribute("todayRevenue",  todayRevenue);
+        model.addAttribute("recentOrders",  recentOrders);
         model.addAttribute("lowStockBooks", lowStock);
+
+        // KPI(ì¶œê³  ëŒ€ê¸°/ë°°ì†¡ ì¤‘)
+        model.addAttribute("pendingCount",  pendingCount);   // JSPì—ì„œ ê·¸ëŒ€ë¡œ ì‚¬ìš©
+        model.addAttribute("shippingCount", shippingCount);  // JSPì—ì„œ ê·¸ëŒ€ë¡œ ì‚¬ìš©
 
         return "admin/dashboard"; // /WEB-INF/views/admin/dashboard.jsp
     }
 
     /* ==================== helpers ==================== */
 
-    // label Å°¸¦ ´ë/¼Ò¹®ÀÚ/´Ù¸¥ ÀÌ¸§±îÁö ¾ÈÀüÇÏ°Ô »Ì±â
+    private static final SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
+
+    /**
+     * label í‚¤ ìœ ì—° ë§¤í•‘:
+     *  - ì¼ì(d, D, date, DATE) ë˜ëŠ”
+     *  - label/LABEL, category/CATEGORY, name/NAME, status/STATUS
+     */
     private static String labelFrom(Map<String,Object> row) {
         if (row == null) return "";
-        Object v = firstNonNull(row, "label", "LABEL", "category", "CATEGORY", "name", "NAME", "status", "STATUS");
-        return String.valueOf(v != null ? v : "");
+        Object v = firstNonNull(row,
+                "d","D","date","DATE",
+                "label","LABEL",
+                "category","CATEGORY",
+                "name","NAME",
+                "status","STATUS");
+        if (v == null) return "";
+        if (v instanceof Date) return DF.format((Date) v);
+        return String.valueOf(v);
     }
 
-    // value/count/total µî ¾î¶² Å°¿©µµ ¾ÈÀüÇÏ°Ô int ÃßÃâ
+    /**
+     * ê°’ í‚¤ ìœ ì—° ë§¤í•‘:
+     *  - amount/AMOUNT, total_amount/TOTAL_AMOUNT, sum/SUM, revenue/REVENUE
+     *  - value/VALUE, count/COUNT, total/TOTAL
+     */
     private static Integer valueFrom(Map<String,Object> row) {
         if (row == null) return 0;
-        Object v = firstNonNull(row, "value", "VALUE", "count", "COUNT", "total", "TOTAL");
+        Object v = firstNonNull(row,
+                "amount","AMOUNT","total_amount","TOTAL_AMOUNT",
+                "sum","SUM","revenue","REVENUE",
+                "value","VALUE","count","COUNT","total","TOTAL");
         if (v instanceof Number) return ((Number) v).intValue();
         if (v != null) {
             try { return Integer.parseInt(String.valueOf(v)); } catch (Exception ignore) {}
