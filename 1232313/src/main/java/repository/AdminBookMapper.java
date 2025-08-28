@@ -1,60 +1,115 @@
 package repository;
 
 import java.util.List;
-import org.apache.ibatis.annotations.*;
-import vo.Book;
 
+import org.apache.ibatis.annotations.*;
+import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
+
+import vo.Book;
+import java.util.Map;
 @Mapper
 public interface AdminBookMapper {
 
-    // √— ∞≥ºˆ (¡¶∏Ò/¿˙¿⁄ ∞Àªˆ)
+    /* Ï¥ù Í∞úÏàò (Í≤ÄÏÉâÏñ¥ ÏòµÏÖò) */
+    @Lang(XMLLanguageDriver.class)
     @Select({
         "<script>",
-        "SELECT COUNT(*) FROM books",
+        "SELECT COUNT(*)",
+        "FROM books b",
         "<where>",
         "  <if test='keyword != null and keyword.trim() != \"\"'>",
-        "    (LOWER(title) LIKE '%'||LOWER(#{keyword})||'%'",
-        "     OR LOWER(author) LIKE '%'||LOWER(#{keyword})||'%')",
+        "    (LOWER(b.title)  LIKE '%' || LOWER(#{keyword}) || '%' ",
+        "     OR LOWER(b.author) LIKE '%' || LOWER(#{keyword}) || '%')",
         "  </if>",
         "</where>",
         "</script>"
     })
     int count(@Param("keyword") String keyword);
 
-    // ∆‰¿Ã¡ˆ ¡∂»∏ (√÷Ω≈ book_id DESC)
+    /* Î™©Î°ù ÌéòÏù¥ÏßÄ (Oracle 10g/11g Ìò∏Ìôò: ROW_NUMBER ÌéòÏù¥Ïßï) */
+    @Lang(XMLLanguageDriver.class)
     @Select({
         "<script>",
-        "SELECT book_id AS bookId, title, author, description, price, stock, cover_image",
-        "FROM books",
-        "<where>",
-        "  <if test='keyword != null and keyword.trim() != \"\"'>",
-        "    (LOWER(title) LIKE '%'||LOWER(#{keyword})||'%'\n",
-        "     OR LOWER(author) LIKE '%'||LOWER(#{keyword})||'%')",
-        "  </if>",
-        "</where>",
-        "ORDER BY book_id DESC",
-        "OFFSET #{offset} ROWS FETCH NEXT #{pageSize} ROWS ONLY",
+        "SELECT * FROM (",
+        "  SELECT",
+        "    b.book_id      AS bookId,",
+        "    b.title        AS title,",
+        "    b.author       AS author,",
+        "    b.description  AS description,",
+        "    b.price        AS price,",
+        "    b.stock        AS stock,",
+        "    b.cover_image  AS coverImage,",
+        "    ROW_NUMBER() OVER (ORDER BY b.book_id DESC) AS rn",
+        "  FROM books b",
+        "  <where>",
+        "    <if test='keyword != null and keyword.trim() != \"\"'>",
+        "      (LOWER(b.title) LIKE '%' || LOWER(#{keyword}) || '%' ",
+        "       OR LOWER(b.author) LIKE '%' || LOWER(#{keyword}) || '%')",
+        "    </if>",
+        "  </where>",
+        ")",
+        "WHERE rn BETWEEN #{start} AND #{end}",
         "</script>"
     })
-    List<Book> findPaged(@Param("keyword") String keyword,
-                         @Param("offset") int offset,
-                         @Param("pageSize") int pageSize);
+    List<Book> findPaged(
+        @Param("keyword") String keyword,
+        @Param("start")   int start,
+        @Param("end")     int end
+    );
 
-    // ¥‹∞« ¡∂»∏
-    @Select("SELECT book_id AS bookId, title, author, description, price, stock, cover_image FROM books WHERE book_id=#{id}")
+    /* Îã®Í±¥ Ï°∞Ìöå */
+    @Select({
+        "SELECT b.book_id AS bookId, b.title, b.author, b.description, b.price,",
+        "       b.stock, b.cover_image AS coverImage",
+        "  FROM books b",
+        " WHERE b.book_id = #{id}"
+    })
     Book findById(@Param("id") Long id);
 
-    // µÓ∑œ
-    @Insert("INSERT INTO books (book_id, title, author, description, price, stock, cover_image) " +
-            "VALUES (SEQ_BOOKS.NEXTVAL, #{title}, #{author}, #{description}, #{price}, #{stock}, #{cover_image})")
-    @SelectKey(statement = "SELECT SEQ_BOOKS.CURRVAL FROM dual", keyProperty = "bookId", before = false, resultType = long.class)
+    /* Îì±Î°ù ‚Äî ÏãúÌÄÄÏä§ ÏÑ† Ï°∞Ìöå ÌõÑ ÏÇ¨Ïö© (before=true) */
+    @Insert({
+        "INSERT INTO books (book_id, title, author, description, price, stock, cover_image)",
+        "VALUES (#{bookId}, #{title}, #{author}, #{description}, #{price}, #{stock}, #{coverImage})"
+    })
+    @SelectKey(
+        statement = "SELECT SEQ_BOOKS.NEXTVAL FROM dual",
+        keyProperty = "bookId",
+        before = true,
+        resultType = Long.class
+    )
     int insert(Book b);
 
-    // ºˆ¡§
-    @Update("UPDATE books SET title=#{title}, author=#{author}, description=#{description}, price=#{price}, stock=#{stock}, cover_image=#{cover_image} WHERE book_id=#{bookId}")
+    /* ÏàòÏ†ï */
+    @Update({
+        "UPDATE books",
+        "   SET title       = #{title},",
+        "       author      = #{author},",
+        "       description = #{description},",
+        "       price       = #{price},",
+        "       stock       = #{stock},",
+        "       cover_image = #{coverImage}",
+        " WHERE book_id     = #{bookId}"
+    })
     int update(Book b);
 
-    // ªË¡¶
-    @Delete("DELETE FROM books WHERE book_id=#{id}")
+    /* ÏÇ≠Ï†ú */
+    @Delete("DELETE FROM books WHERE book_id = #{id}")
     int delete(@Param("id") Long id);
+    
+    @Select({
+    	  "SELECT * FROM (",
+    	  "  SELECT b.book_id AS bookId, b.title AS title,",
+    	  "         SUM(oi.quantity) AS qty,",
+    	  "         SUM(oi.quantity * oi.price) AS revenue",
+    	  "    FROM orders o",
+    	  "    JOIN order_items oi ON oi.order_id = o.order_id",
+    	  "    JOIN books b        ON b.book_id = oi.book_id",
+    	  "   WHERE o.order_date >= SYSDATE - #{days}",
+    	  "     AND o.status <> 'CANCELLED'",
+    	  "   GROUP BY b.book_id, b.title",
+    	  "   ORDER BY qty DESC",
+    	  ") WHERE ROWNUM <= #{limit}"
+    	})
+    	List<Map<String,Object>> topBooksByQty(@Param("days") int days, @Param("limit") int limit);
+    
 }

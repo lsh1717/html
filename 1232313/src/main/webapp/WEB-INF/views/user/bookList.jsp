@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c"  uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 
 <!DOCTYPE html>
@@ -14,10 +15,10 @@
 
 <style>
   :root{
-    --brand:#4F46E5;          /* 인디고 */
-    --brand-2:#7C3AED;        /* 보조 보라 */
-    --ink:#0f172a;            /* 진한 텍스트 */
-    --muted:#6b7280;          /* 보조 텍스트 */
+    --brand:#4F46E5;
+    --brand-2:#7C3AED;
+    --ink:#0f172a;
+    --muted:#6b7280;
     --card:#ffffff;
     --bg:#f5f7fb;
     --ring:0 10px 30px rgba(15,23,42,.08);
@@ -35,11 +36,9 @@
     color:var(--ink);
   }
 
-  /* 헤더 아래 적당한 호흡 */
   .page-shell{max-width:1120px; margin:32px auto 56px; padding:0 16px;}
   @media (min-width:1200px){ .page-shell{margin-top:40px;} }
 
-  /* 섹션 카드 */
   .section{
     background:var(--card);
     border:1px solid var(--bd);
@@ -47,7 +46,6 @@
     box-shadow:var(--ring);
     padding:20px 18px 24px;
   }
-
   .section-title{
     font-weight:800; letter-spacing:-.2px;
     font-size:1.25rem; margin:2px 0 16px;
@@ -59,7 +57,7 @@
     box-shadow:0 0 0 3px rgba(79,70,229,.12);
   }
 
-  /* 검색바(필 형태) */
+  /* 검색바 */
   .searchbar .form-control{
     height:46px; border-radius:999px 0 0 999px; border:1px solid var(--bd);
     box-shadow: inset 0 1px 2px rgba(15,23,42,.04);
@@ -73,23 +71,83 @@
   }
   .searchbar .btn:hover{ transform:translateY(-1px); box-shadow:0 14px 28px rgba(79,70,229,.28); }
 
-  /* 캐러셀 */
-  .hero{
-    border-radius:16px; overflow:hidden; box-shadow:var(--ring-soft);
+  /* 추천 도서 히어로 캐러셀 */
+  .reco{
+    border-radius:18px; overflow:hidden; box-shadow:var(--ring);
     border:1px solid var(--bd);
   }
-  .hero .carousel-item{ height:280px; }
-  .hero .carousel-item img{ width:100%; height:100%; object-fit:cover; }
-  .hero .caption{
-    position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
-    background:rgba(15,23,42,.55); color:#fff; padding:10px 18px;
-    border-radius:999px; font-weight:700; letter-spacing:.1px;
-    backdrop-filter: blur(4px);
-    box-shadow:0 6px 16px rgba(0,0,0,.25);
+  .reco .carousel-item{ height:340px; }
+  @media (max-width:576px){ .reco .carousel-item{ height:300px; } }
+
+  .reco-bg{
+    position:absolute; inset:0;
+    background-size:cover; background-position:center;
+    filter: blur(20px) saturate(120%) brightness(95%);
+    transform: scale(1.1);
   }
-  .carousel-control-prev, .carousel-control-next{
-    filter: drop-shadow(0 4px 10px rgba(0,0,0,.25));
+  .reco-vignette{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(110% 90% at 60% 20%, rgba(0,0,0,.0) 0%, rgba(0,0,0,.35) 70%),
+      linear-gradient(0deg, rgba(0,0,0,.10), rgba(0,0,0,.10));
   }
+  /* 오버레이는 클릭 통과 */
+.reco-vignette,
+.reco-bg { pointer-events: none; }
+
+/* 내비 버튼이 가장 위 */
+.reco .carousel-control-prev,
+.reco .carousel-control-next { z-index: 10; pointer-events: auto; }
+
+/* (선택) 콘텐츠는 버튼 위로 안 올라오게 */
+.reco-content { z-index: 2; } /* 그대로 두되, 위 버튼이 10이니 OK */
+  .reco-content{
+    position:relative; z-index:2; height:100%;
+    display:flex; align-items:center; gap:28px;
+    padding:22px;
+  }
+  .reco-card{
+    display:flex; align-items:center; gap:18px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.22);
+    border-radius:16px; padding:14px;
+    backdrop-filter: blur(6px);
+    box-shadow:0 10px 28px rgba(0,0,0,.28);
+  }
+  .reco-cover{
+    width:160px; height:220px; object-fit:cover;
+    border-radius:12px; background:#fff;
+    box-shadow:0 16px 30px rgba(0,0,0,.35);
+  }
+  @media (max-width:576px){
+    .reco-cover{ width:120px; height:168px; }
+  }
+  .reco-meta .badge{
+    background:rgba(255,255,255,.22); color:#fff; font-weight:700;
+    border:1px solid rgba(255,255,255,.35);
+    border-radius:999px; padding:.25rem .6rem; font-size:.75rem;
+    letter-spacing:.2px;
+  }
+  .reco-meta h3{
+    color:#fff; font-size:1.25rem; font-weight:800; margin:.35rem 0 .25rem;
+    text-shadow:0 2px 8px rgba(0,0,0,.25);
+  }
+  .reco-meta p{ color:#e6e6e6; margin:0 0 .6rem; }
+  .btn-brand{
+    color:#fff; font-weight:800; border:none;
+    background:linear-gradient(135deg, var(--brand), var(--brand-2));
+    box-shadow:0 10px 20px rgba(79,70,229,.35);
+  }
+  .btn-brand:hover{ color:#fff; transform:translateY(-1px); }
+
+  .reco .carousel-control-prev, .reco .carousel-control-next{
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
+  }
+  .reco .carousel-indicators li{
+    width:8px; height:8px; border-radius:50%; margin:0 4px;
+    background:rgba(255,255,255,.55);
+  }
+  .reco .carousel-indicators .active{ background:#fff; }
 
   /* 도서 카드 그리드 */
   .book-grid .card{
@@ -106,7 +164,7 @@
   .book-grid .author{ color:var(--muted); font-size:.92rem; }
   .book-grid .price{ color:var(--brand); font-weight:800; }
 
-  /* 페이지네이션(필칩) */
+  /* 페이지네이션 */
   .pagination .page-link{
     border-radius:999px; margin:0 4px; color:var(--brand);
     border:1px solid var(--bd); height:36px; min-width:36px; padding:.4rem .75rem;
@@ -116,10 +174,7 @@
     box-shadow:0 10px 18px rgba(79,70,229,.25);
   }
 
-  /* 오른쪽 미니 안내 */
   .hint{ color:var(--muted); font-size:.9rem; margin-top:4px; }
-
-  /* 유틸 */
   a.link{ text-decoration:none; color:inherit; }
   a.link:hover{ color:var(--brand); }
 </style>
@@ -145,33 +200,63 @@
 
     <!-- 추천 도서 캐러셀 -->
     <c:if test="${not empty recommendedBooks}">
-      <div id="recommendedCarousel" class="carousel slide hero mb-4" data-ride="carousel" data-interval="5000">
+      <div id="reco" class="carousel slide reco mb-4"
+           data-ride="carousel" data-interval="5000" data-touch="true" data-pause="hover" data-keyboard="true">
+
+        <ol class="carousel-indicators">
+          <c:forEach var="b" items="${recommendedBooks}" varStatus="s">
+            <li data-target="#reco" data-slide-to="${s.index}" class="${s.first ? 'active' : ''}"></li>
+          </c:forEach>
+        </ol>
+
         <div class="carousel-inner">
-          <c:forEach var="book" items="${recommendedBooks}" varStatus="s">
+          <c:forEach var="b" items="${recommendedBooks}" varStatus="s">
+            <c:set var="coverUrl" value="${empty b.cover_image ? ctx.concat('/resources/img/noimg.png') : b.cover_image}" />
             <div class="carousel-item ${s.first ? 'active' : ''}">
-              <img src="${book.cover_image}" alt="${book.title}">
-              <div class="caption">${book.title}</div>
+              <div class="reco-bg" style="background-image:url('${coverUrl}');"></div>
+              <div class="reco-vignette"></div>
+
+              <div class="reco-content container">
+                <div class="reco-card">
+                  <img class="reco-cover"
+                       src="${coverUrl}"
+                       alt="${fn:escapeXml(b.title)}"
+                       onerror="this.src='${ctx}/resources/img/noimg.png'">
+                  <div class="reco-meta">
+                    <span class="badge">추천 도서</span>
+                    <h3>${b.title}</h3>
+                    <p>저자 · ${b.author}</p>
+                    <a class="btn btn-brand btn-sm px-3"
+                       href="${ctx}/user/bookDetail/${b.bookId}">
+                      바로 보기
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </c:forEach>
         </div>
-        <a class="carousel-control-prev" href="#recommendedCarousel" role="button" data-slide="prev">
+
+        <a class="carousel-control-prev" href="#reco" role="button" data-slide="prev" aria-label="이전">
           <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span class="sr-only">이전</span>
         </a>
-        <a class="carousel-control-next" href="#recommendedCarousel" role="button" data-slide="next">
+        <a class="carousel-control-next" href="#reco" role="button" data-slide="next" aria-label="다음">
           <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          <span class="sr-only">다음</span>
         </a>
       </div>
     </c:if>
 
-    <!-- 그리드 -->
+    <!-- 도서 그리드 -->
     <div id="bookContainer" class="row book-grid">
       <c:forEach var="b" items="${books}">
+        <c:set var="coverUrl" value="${empty b.cover_image ? ctx.concat('/resources/img/noimg.png') : b.cover_image}" />
         <div class="col-6 col-sm-4 col-md-3 mb-4 d-flex">
           <div class="card w-100">
             <a class="link" href="${ctx}/user/bookDetail/${b.bookId}">
-              <img class="card-img-top" src="${b.cover_image}" alt="${b.title}">
+              <img class="card-img-top"
+                   src="${coverUrl}"
+                   alt="${fn:escapeXml(b.title)}"
+                   onerror="this.src='${ctx}/resources/img/noimg.png'">
             </a>
             <div class="card-body">
               <div class="title"><a class="link" href="${ctx}/user/bookDetail/${b.bookId}">${b.title}</a></div>
@@ -208,11 +293,12 @@
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.3/umd/popper.min.js"></script>
+<!-- Bootstrap 4.x → Popper 1.x 필수 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
 <script>
-  /* 디바운스 검색(AJAX) */
+  // 디바운스 검색(AJAX)
   (function(){
     var t;
     $('#keyword').on('keyup', function(){
@@ -225,10 +311,31 @@
         });
       }, 280);
     });
-
     $('#searchForm').on('submit', function(e){
       e.preventDefault();
-      $('#keyword').trigger('keyup'); // 같은 로직 재활용
+      $('#keyword').trigger('keyup');
+    });
+  })();
+
+  // 키보드 ←/→ 로 캐러셀 이동
+  $(document).on('keydown', function(e){
+    if (e.key === 'ArrowRight') $('#reco').carousel('next');
+    if (e.key === 'ArrowLeft')  $('#reco').carousel('prev');
+  });
+
+  // 터치 스와이프(모바일 UX)
+  (function(){
+    var $carousel = $('#reco');
+    var startX = 0;
+    $carousel.on('touchstart', function(e){ startX = e.originalEvent.touches[0].clientX; });
+    $carousel.on('touchmove', function(e){
+      if(!startX) return;
+      var curX = e.originalEvent.touches[0].clientX;
+      var diff = startX - curX;
+      if(Math.abs(diff) > 40){
+        $(this).carousel(diff > 0 ? 'next' : 'prev');
+        startX = 0;
+      }
     });
   })();
 </script>

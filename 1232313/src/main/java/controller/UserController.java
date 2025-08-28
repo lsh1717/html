@@ -36,7 +36,7 @@ public class UserController {
     @Autowired private BookService bookService;
     @Autowired private MemberService memberService;
     @Autowired private OrderService orderService;
-    @Autowired private ReviewService reviewService; // 리뷰 서비스
+    @Autowired private ReviewService reviewService;
 
     /** 도서 목록 */
     @GetMapping("/user/bookList")
@@ -44,29 +44,49 @@ public class UserController {
                            @RequestParam(value = "keyword", required = false) String keyword,
                            Model model) {
 
-        final int pageSize = 8;
+        final int pageSize  = 8;
+        final int blockSize = 5;
+
+        page = Math.max(1, page);
 
         int totalCount = bookService.getTotalCount(keyword);
-        int totalPage  = (int) Math.ceil((double) totalCount / pageSize);
+        int totalPage  = Math.max(1, (int)Math.ceil((double)totalCount / pageSize));
+        if (page > totalPage) page = totalPage;
 
-        final int blockSize = 5;
         int startPage = ((page - 1) / blockSize) * blockSize + 1;
         int endPage   = Math.min(startPage + blockSize - 1, totalPage);
 
         List<Book> books = bookService.getPagedBooks(keyword, page, pageSize);
 
-        // 추천 도서 3권(랜덤)
-        List<Book> recommendedBooks = new ArrayList<>();
-        List<Book> allBooks = bookService.getAllBooks();
-        if (allBooks != null && !allBooks.isEmpty()) {
-            Collections.shuffle(allBooks);
-            for (int i = 0; i < Math.min(3, allBooks.size()); i++) {
-                recommendedBooks.add(allBooks.get(i));
+        /* ===== 추천(전 사용자 공통) 베스트셀러 =====
+           - 최근 30일 판매량 상위 6권 (취소 제외)
+           - 데이터 없을 때 최신 6권 → 없으면 랜덤 6권 폴백
+        */
+        List<Book> featured = new ArrayList<>();
+        try {
+            List<Book> best = bookService.bestSellers(30, 6);
+            if (best != null) featured = best;
+        } catch (Throwable ignore) { /* 폴백 처리 */ }
+
+        if (featured == null || featured.isEmpty()) {
+            List<Book> all = bookService.getAllBooks();
+            if (all != null && !all.isEmpty()) {
+                // 최신 등록순(가정: bookId 내림차순)
+                all.sort((a, b) -> Long.compare(
+                    b.getBookId() == null ? 0L : b.getBookId(),
+                    a.getBookId() == null ? 0L : a.getBookId()
+                ));
+                featured = all.subList(0, Math.min(6, all.size()));
+            } else {
+                featured = Collections.emptyList();
             }
         }
 
+        // 뷰 호환
+        model.addAttribute("featuredBooks", featured);
+        model.addAttribute("recommendedBooks", featured);
+
         model.addAttribute("books", books);
-        model.addAttribute("recommendedBooks", recommendedBooks);
         model.addAttribute("keyword", keyword);
         model.addAttribute("page", page);
         model.addAttribute("totalPage", totalPage);
@@ -78,10 +98,7 @@ public class UserController {
         return "user/layout";
     }
 
-    /**
-     * 도서 상세 + 리뷰
-     * rpage: 리뷰 페이지(1부터), rsize: 페이지당 리뷰 수(5)
-     */
+    /** 도서 상세 + 리뷰 */
     @GetMapping("/user/bookDetail/{bookId}")
     public String bookDetail(@PathVariable("bookId") Long bookId,
                              @RequestParam(value = "rpage", defaultValue = "1") int rpage,
@@ -90,7 +107,6 @@ public class UserController {
         Book book = bookService.getBookById(bookId);
         model.addAttribute("book", book);
 
-        // ---- 리뷰 페이징/평균/히스토그램 ----
         final int rsize = 5;
         int totalReviews = reviewService.countByBook(bookId);
         int rtotalPage   = (int) Math.ceil(totalReviews / (double) rsize);
@@ -102,19 +118,16 @@ public class UserController {
         Double avg = reviewService.avgRating(bookId);
         double avgRating = (avg == null ? 0.0 : avg.doubleValue());
 
-        // 히스토그램(서비스에 전용 메서드가 없다면 간단 계산)
+        // 간단 히스토그램
         int[] ratingCounts = new int[5];
         try {
-            // 전부 긁어와서 카운팅(데이터가 많지 않다는 가정)
             List<Review> all = reviewService.listByBook(bookId, 1, 1000);
             for (Review r : all) {
                 if (r.getRating() != null && r.getRating() >= 1 && r.getRating() <= 5) {
                     ratingCounts[r.getRating() - 1]++;
                 }
             }
-        } catch (Exception ignore) {
-            // 실패 시 0으로 둠
-        }
+        } catch (Exception ignore) {}
 
         model.addAttribute("reviews", reviews);
         model.addAttribute("avgRating", avgRating);
@@ -123,7 +136,7 @@ public class UserController {
         model.addAttribute("rpage", rpage);
         model.addAttribute("rtotalPage", Math.max(rtotalPage, 1));
 
-        // ---- 구매자만 리뷰 작성 가능(+이미 작성자는 불가) ----
+        // 구매자만 리뷰 작성(미작성자)
         boolean canReview = false;
         Long loginUserId = null;
 
@@ -147,7 +160,7 @@ public class UserController {
         return "user/layout";
     }
 
-    /** 리뷰 등록 (구매자 + 미작성자만) */
+    /** 리뷰 등록 */
     @PostMapping("/reviews")
     public String createReview(@RequestParam Long bookId,
                                @RequestParam int rating,

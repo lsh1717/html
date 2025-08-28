@@ -58,19 +58,14 @@ public class AdminController {
         List<String> sLabels = s.stream().map(AdminController::labelFrom).collect(Collectors.toList());
         List<Integer> sData  = s.stream().map(AdminController::valueFrom).collect(Collectors.toList());
 
-        // ===== 카테고리 통계 =====
-        List<Map<String,Object>> c = orEmpty(bookService.categoryCounts());
-        List<String> cLabels = c.stream().map(AdminController::labelFrom).collect(Collectors.toList());
-        List<Integer> cData  = c.stream().map(AdminController::valueFrom).collect(Collectors.toList());
-
+       
         // ===== JSON 직렬화 (JSP에서 그대로 ${}로 출력) =====
         ObjectMapper om = new ObjectMapper();
         model.addAttribute("revenueLabels",  om.writeValueAsString(dLabels)); // 일자별
         model.addAttribute("revenueData",    om.writeValueAsString(dData));   // 일자별
         model.addAttribute("statusLabels",   om.writeValueAsString(sLabels));
         model.addAttribute("statusData",     om.writeValueAsString(sData));
-        model.addAttribute("categoryLabels", om.writeValueAsString(cLabels));
-        model.addAttribute("categoryData",   om.writeValueAsString(cData));
+       
 
         // ===== 숫자/목록 바인딩 =====
         model.addAttribute("totalUsers",    totalUsers);
