@@ -1004,3 +1004,12 @@ async function logout () {
 .btn.primary{background:#6b46c1;border-color:#6b46c1}
 .hint{color:#cbd5e1}.mt{margin-top:12px}
 </style>
+
+
+
+================================================================================================================================================
+db
+===================================
+ALTER TABLE users
+  MODIFY birth_date DATE NULL,
+  MODIFY gender ENUM('MALE','FEMALE','UNKNOWN') NOT NULL DEFAULT 'UNKNOWN';
